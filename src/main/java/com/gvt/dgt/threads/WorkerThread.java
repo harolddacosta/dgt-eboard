@@ -15,7 +15,7 @@ import java.io.InputStreamReader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.gvt.dgt.library.DgtEBoard;
+import com.gvt.dgt.DgtEBoard;
 
 /**
  * Simple class that takes some input from the command line and in some cases will do some action against the DLL (show, hide, quit).

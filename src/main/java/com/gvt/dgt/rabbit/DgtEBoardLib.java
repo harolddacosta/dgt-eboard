@@ -1,4 +1,4 @@
-package com.gvt.dgt.library;
+package com.gvt.dgt.rabbit;
 
 /**
  * Copyright 2012 DGT

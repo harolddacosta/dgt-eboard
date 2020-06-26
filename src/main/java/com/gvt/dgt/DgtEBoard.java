@@ -1,4 +1,6 @@
-package com.gvt.dgt.library;
+package com.gvt.dgt;
+
+import com.gvt.dgt.rabbit.DgtEBoardLib;
 
 public interface DgtEBoard {
 

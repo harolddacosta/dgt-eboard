@@ -3,8 +3,8 @@ package com.gvt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.gvt.dgt.library.DgtEBoard;
-import com.gvt.dgt.library.impl.DgtEBoardRabbit;
+import com.gvt.dgt.DgtEBoard;
+import com.gvt.dgt.rabbit.DgtEBoardRabbit;
 import com.gvt.dgt.threads.WorkerThread;
 
 /**
@@ -20,8 +20,13 @@ public class Application {
 	 * The main showing how the DLL can be called and how everything is organized.
 	 * 
 	 * @param args Command line arguments (not used)
+	 * @throws Exception
 	 */
 	public static void main(String[] args) {
+		startDgtEBoard();
+	}
+
+	private static void startDgtEBoard() {
 		String model = System.getProperty("sun.arch.data.model");
 		logger.debug("We have found a {} bit environment!", model);
 
