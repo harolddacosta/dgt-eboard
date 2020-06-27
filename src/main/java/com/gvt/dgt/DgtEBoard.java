@@ -4,8 +4,6 @@ import com.gvt.dgt.rabbit.DgtEBoardLib;
 
 public interface DgtEBoard {
 
-	DgtEBoardLib getDll();
-
 	/**
 	 * Method to set the correct dll version (32 or 64 bit).
 	 * 
@@ -34,6 +32,8 @@ public interface DgtEBoard {
 	 * Hide the DLL dialog
 	 */
 	void hide();
+
+	DgtEBoardLib getDll();
 
 	DgtEBoardLib.CallbackFunctionCharPtr getStatus();
 

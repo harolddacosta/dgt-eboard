@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import com.gvt.dgt.DgtEBoard;
 import com.gvt.dgt.rabbit.DgtEBoardRabbit;
 import com.gvt.dgt.threads.WorkerThread;
+import com.gvt.graphic.SnipIt;
 
 /**
  * Application to make possible to play with dgteboards on any chess server without use bots
@@ -23,7 +24,8 @@ public class Application {
 	 * @throws Exception
 	 */
 	public static void main(String[] args) {
-		startDgtEBoard();
+//		startDgtEBoard();
+		new SnipIt();
 	}
 
 	private static void startDgtEBoard() {
