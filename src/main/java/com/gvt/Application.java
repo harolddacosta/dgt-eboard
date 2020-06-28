@@ -1,9 +1,8 @@
 package com.gvt;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.gvt.windows.MainWindows;
+
+import nu.pattern.OpenCV;
 
 /**
  * Application to make possible to play with dgteboards on any chess server without use bots
@@ -11,8 +10,6 @@ import com.gvt.windows.MainWindows;
  * @author Harold Da Costa
  */
 public class Application {
-
-	private static Logger logger = LoggerFactory.getLogger(Application.class);
 
 	/**
 	 * The main showing how the DLL can be called and how everything is organized.
@@ -22,6 +19,9 @@ public class Application {
 	 */
 	public static void main(String[] args) {
 		new MainWindows();
+
+		OpenCV.loadShared();
+		System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
 	}
 
 }

@@ -30,6 +30,8 @@ import javax.swing.border.EmptyBorder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.gvt.windows.MainWindows;
+
 public class SnipIt {
 
 	private static Logger logger = LoggerFactory.getLogger(SnipIt.class);
@@ -171,6 +173,8 @@ public class SnipIt {
 //				}
 
 				logger.debug("Selected bounds:{}", selectedBounds);
+
+				MainWindows.chessboardRecognition.start();
 			});
 
 			addComponentListener(new ComponentAdapter() {

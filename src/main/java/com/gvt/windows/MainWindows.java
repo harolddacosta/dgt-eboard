@@ -15,12 +15,16 @@ import com.gvt.dgt.DgtEBoard;
 import com.gvt.dgt.rabbit.DgtEBoardRabbit;
 import com.gvt.dgt.threads.WorkerThread;
 import com.gvt.graphic.SnipIt;
+import com.gvt.image.ChessboardRecognition;
 
 public class MainWindows {
 
 	private static Logger logger = LoggerFactory.getLogger(MainWindows.class);
 
-	private DgtEBoard dgtEBoard;
+	// TODO esto se debería cambiar por standalone instead of statics
+	public static DgtEBoard dgtEBoard;
+	public static SnipIt snipIt;
+	public static ChessboardRecognition chessboardRecognition;
 
 	public MainWindows() {
 		EventQueue.invokeLater(new Runnable() {
@@ -42,7 +46,13 @@ public class MainWindows {
 
 				JButton selectChessboard = new JButton("Select chessboard");
 				selectChessboard.addActionListener(e -> {
-					SnipIt snipIt = new SnipIt();
+					if (chessboardRecognition != null) {
+						chessboardRecognition.stop();
+					}
+
+					chessboardRecognition = new ChessboardRecognition();
+
+					snipIt = new SnipIt();
 				});
 
 				JButton runDgtEBoard = new JButton("Run DgtEBoard");
@@ -60,8 +70,8 @@ public class MainWindows {
 					}
 				});
 
-				frame.getContentPane().add(selectChessboard);
 				frame.getContentPane().add(runDgtEBoard);
+				frame.getContentPane().add(selectChessboard);
 				frame.setVisible(true);
 			}
 		});
