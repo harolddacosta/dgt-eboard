@@ -34,7 +34,7 @@ public class SnipIt {
 
 	private static Logger logger = LoggerFactory.getLogger(SnipIt.class);
 
-	private int[] selectedBounds;
+	private Rectangle selectedBounds;
 
 	public SnipIt() {
 		EventQueue.invokeLater(new Runnable() {
@@ -160,11 +160,15 @@ public class SnipIt {
 			button.addActionListener(e -> {
 				SwingUtilities.getWindowAncestor(SelectionPane.this).dispose();
 
-				selectedBounds = new int[4];
-				selectedBounds[0] = getX();
-				selectedBounds[1] = getY();
-				selectedBounds[2] = getWidth();
-				selectedBounds[3] = getHeight();
+				selectedBounds = new Rectangle(getX(), getY(), getWidth(), getHeight());
+
+//				try {
+//					Robot robot = new Robot();
+//					BufferedImage screenFullImage = robot.createScreenCapture(selectedBounds);
+//				} catch (AWTException e1) {
+//					// TODO Auto-generated catch block
+//					e1.printStackTrace();
+//				}
 
 				logger.debug("Selected bounds:{}", selectedBounds);
 			});
@@ -198,7 +202,7 @@ public class SnipIt {
 		}
 	}
 
-	public static Rectangle getVirtualBounds() {
+	private static Rectangle getVirtualBounds() {
 		Rectangle bounds = new Rectangle(0, 0, 0, 0);
 
 		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
@@ -210,7 +214,7 @@ public class SnipIt {
 		return bounds;
 	}
 
-	public int[] getSelectedBounds() {
+	public Rectangle getSelectedBounds() {
 		return selectedBounds;
 	}
 }

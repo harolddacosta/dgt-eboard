@@ -1,17 +1,5 @@
 package com.gvt.dgt.threads;
 
-/**
- * Copyright 2012 DGT
- * All Rights Reserved
- * 
- * Demonstration of calling the DLL for board communication from Java with JNA
- * 
- * $Id: WorkerThread.java 3023 2012-06-07 07:18:13Z jan $
- */
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,33 +39,10 @@ public class WorkerThread extends Thread {
 	 */
 	@Override
 	public void run() {
-		while (true) {
-			logger.debug("Enter command: ");
-			BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+		logger.debug("Enter command: ");
 
-			String cmd = null;
-			try {
-				cmd = br.readLine();
-			} catch (IOException ioe) {
-				logger.debug("IO error trying to read your command!");
-
-				System.exit(1);
-			}
-
-			logger.debug("Processing command:{}", cmd);
-			if (cmd.equals("quit")) {
-				dgtEBoard.setRunning(false);
-				break;
-			} else if (cmd.equals("show")) {
-				// shows the DLL window
-				dgtEBoard.show();
-			} else if (cmd.equals("hide")) {
-				// hides the DLL window
-				dgtEBoard.hide();
-			} else {
-				logger.debug("Command {} unknown!", cmd);
-			}
-		}
+		// shows the DLL window
+		dgtEBoard.show();
 	}
 
 }
