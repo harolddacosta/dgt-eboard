@@ -17,12 +17,15 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.opencv.calib3d.Calib3d;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
+import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
+import org.opencv.core.Size;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
@@ -44,6 +47,7 @@ class Threshold {
 	private int maxCorners = 23;
 	private double minCanny = 5;
 	private double maxCanny = 75;
+	private int squares = 16;
 	private Random rng = new Random(12345);
 
 	public Threshold(String[] args) {
@@ -84,6 +88,7 @@ class Threshold {
 
 		panel.add(addSlider1());
 		panel.add(addSlider2());
+		panel.add(addSlider3());
 
 		imgLabel = new JLabel(new ImageIcon(img));
 		pane.add(imgLabel, BorderLayout.CENTER);
@@ -147,11 +152,36 @@ class Threshold {
 		return sliderPanel;
 	}
 
+	private JPanel addSlider3() {
+		JPanel sliderPanel = new JPanel();
+		sliderPanel.setLayout(new BoxLayout(sliderPanel, BoxLayout.PAGE_AXIS));
+		sliderPanel.add(new JLabel("squares:"));
+
+		JSlider slider = new JSlider(0, MAX_THRESHOLD, maxCorners);
+		slider.setMajorTickSpacing(20);
+		slider.setMinorTickSpacing(10);
+		slider.setPaintTicks(true);
+		slider.setPaintLabels(true);
+		slider.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				JSlider source = (JSlider) e.getSource();
+				squares = source.getValue();
+				logger.debug("Valor de squares:{}", squares);
+
+				update();
+			}
+		});
+		sliderPanel.add(slider);
+
+		return sliderPanel;
+	}
+
 	private void update() {
 		/// Parameters for Shi-Tomasi algorithm
 		maxCorners = Math.max(maxCorners, 1);
 		List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-		MatOfPoint corners = new MatOfPoint();
+		MatOfPoint2f corners = new MatOfPoint2f();
 		Mat hierarchy = new Mat();
 		double qualityLevel = 0.01;
 		double minDistance = 10;
@@ -160,19 +190,32 @@ class Threshold {
 		double k = 0.04;
 
 		/// Copy the source image
-//		Mat copy = src.clone();
+		Mat copy = src.clone();
+		Imgproc.cvtColor(copy, srcGray, Imgproc.COLOR_BGR2GRAY);
 
-		Imgproc.Canny(srcGray, cannyApplied, minCanny, maxCanny); // 5, 75
-		Imgproc.findContours(cannyApplied, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+//		Imgproc.Canny(srcGray, srcGray, minCanny, maxCanny); // 5, 75
+//		Imgproc.findContours(cannyApplied, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+//		Imgproc.cornerEigenValsAndVecs(cannyApplied, cannyApplied, blockSize, 1);
+		Size squaresSize = new Size(squares, squares);
+		Calib3d.findChessboardCorners(srcGray, squaresSize, corners,
+				Calib3d.CALIB_CB_ADAPTIVE_THRESH + Calib3d.CALIB_CB_NORMALIZE_IMAGE + Calib3d.CALIB_CB_FAST_CHECK);
+		logger.debug("Is a chessboard:{}", Calib3d.checkChessboard(srcGray, squaresSize));
+		Calib3d.drawChessboardCorners(srcGray, squaresSize, corners, Calib3d.checkChessboard(srcGray, squaresSize));
+
+		for (int x = 0; x < corners.cols(); ++x) {
+			for (int y = 0; y < corners.rows(); ++y) {
+				logger.debug("Corner {}", corners.get(y, x));
+			}
+		}
 
 		Mat finalDraw = new Mat(cannyApplied.size(), CvType.CV_8U, Scalar.all(255));
 
 		for (int i = 0; i < contours.size(); i++) {
-			if (Imgproc.contourArea(contours.get(i)) > 50) {
+			if (Imgproc.contourArea(contours.get(i)) > 60) {
 				Rect rect = Imgproc.boundingRect(contours.get(i));
 //				if ((rect.height > 35 && rect.height < 60) && (rect.width > 35 && rect.width < 60)) {
-				Imgproc.rectangle(src, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),
-						new Scalar(0, 0, 255));
+//				Imgproc.rectangle(copy, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),
+//						new Scalar(0, 0, 255));
 //				}
 			}
 		}
@@ -191,7 +234,7 @@ class Threshold {
 //					new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256)), Imgproc.FILLED);
 //		}
 
-		imgLabel.setIcon(new ImageIcon(HighGui.toBufferedImage(src)));
+		imgLabel.setIcon(new ImageIcon(HighGui.toBufferedImage(srcGray)));
 		frame.repaint();
 	}
 }
