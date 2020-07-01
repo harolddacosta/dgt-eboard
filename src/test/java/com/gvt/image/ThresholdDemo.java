@@ -6,7 +6,6 @@ import java.awt.GridLayout;
 import java.awt.Image;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -23,6 +22,7 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.highgui.HighGui;
@@ -30,6 +30,9 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.jamonapi.Monitor;
+import com.jamonapi.MonitorFactory;
 
 import nu.pattern.OpenCV;
 
@@ -39,7 +42,7 @@ class Threshold {
 
 	private Mat src = new Mat();
 	private Mat srcGray = new Mat();
-	private Mat cannyApplied = new Mat();
+	private Mat copy = new Mat();
 	private JFrame frame;
 	private JLabel imgLabel;
 	private static final int MAX_THRESHOLD = 100;
@@ -47,12 +50,17 @@ class Threshold {
 	private int minCanny = 5;
 	private int maxCanny = 75;
 	private int squares = 6;
-	private Random rng = new Random(12345);
+
+	// Data for chessboard
+	private Point[][] centerBoxPoints = new Point[8][8];
+	private Rect[][] squaresRectangles = new Rect[8][8];
 
 	public Threshold(String[] args) {
 		/// Load source image and convert it to gray
-		String filename = args.length > 0 ? args[0] : getClass().getClassLoader().getResource("onlyChessboard.bmp").getFile();
-		src = Imgcodecs.imread("C:/Users/hdacosta/Development/eclipse-workspace-jsf2/dgt-protocol/target/test-classes/onlyChessboard.bmp");
+		String filename = args.length > 0 ? args[0]
+				: getClass().getClassLoader().getResource("onlyChessboard.bmp").getFile();
+//		src = Imgcodecs.imread("C:/Users/hdacosta/Development/eclipse-workspace-jsf2/dgt-protocol/target/test-classes/onlyChessboard.bmp");
+		src = Imgcodecs.imread(filename);
 		if (src.empty()) {
 			System.err.println("Cannot read image: " + filename);
 			System.exit(0);
@@ -191,28 +199,39 @@ class Threshold {
 		double k = 0.04;
 
 		/// Copy the source image
-		Mat copy = src.clone();
-		Mat dest = Mat.zeros(copy.size(), CvType.CV_8UC3);
+		copy = src.clone();
+//		Mat dest = Mat.zeros(copy.size(), CvType.CV_8UC3);
+		srcGray = new Mat();
 		Imgproc.cvtColor(copy, srcGray, Imgproc.COLOR_BGR2GRAY);
 
-//		Imgproc.Canny(srcGray, srcGray, minCanny, maxCanny); // 5, 75
-//		Imgproc.findContours(srcGray, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+		extractChessboardCoordinates();
+		double squareWidth = centerBoxPoints[1][0].x - centerBoxPoints[0][0].x;
+		double squareHeight = centerBoxPoints[0][1].y - centerBoxPoints[0][0].y;
+
+		logger.debug("Square width:{}", squareWidth);
+		logger.debug("Square height:{}", squareHeight);
+
+		Imgproc.Canny(srcGray, srcGray, minCanny, maxCanny); // 5, 75
+		Imgproc.findContours(srcGray, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 		// Draw contours in dest Mat
 //		Imgproc.drawContours(dest, contours, -1, new Scalar(255, 0, 0));
 //		Imgproc.cornerEigenValsAndVecs(cannyApplied, cannyApplied, blockSize, 1);
-		Point[][] centerBoxPoints = extractChessboardCoordinates();
 
 //		Mat finalDraw = new Mat(cannyApplied.size(), CvType.CV_8U, Scalar.all(255));
 //
-//		for (int i = 0; i < contours.size(); i++) {
-//			if (Imgproc.contourArea(contours.get(i)) > 60) {
-//				Rect rect = Imgproc.boundingRect(contours.get(i));
-//				if ((rect.height > 35 && rect.height < 60) && (rect.width > 35 && rect.width < 60)) {
-//				Imgproc.rectangle(copy, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),
-//						new Scalar(0, 0, 255));
-//				}
+		squareWidth = squareWidth - (squareWidth * 0.02);
+		squareHeight = squareHeight - (squareHeight * 0.02);
+		int minSize = 8;
+		for (int i = 0; i < contours.size(); i++) {
+//			if (Imgproc.contourArea(contours.get(i)) > 10) {
+			Rect rect = Imgproc.boundingRect(contours.get(i));
+			if ((rect.height > minSize && rect.height < squareHeight)
+					&& (rect.width > minSize && rect.width < squareWidth)) {
+			Imgproc.rectangle(copy, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),
+					new Scalar(255, 255, 0));
+			}
 //			}
-//		}
+		}
 
 		/// Apply corner detection
 //		Imgproc.goodFeaturesToTrack(srcGray, corners, maxCorners, qualityLevel, minDistance, new Mat(), blockSize,
@@ -228,21 +247,26 @@ class Threshold {
 //					new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256)), Imgproc.FILLED);
 //		}
 
-		imgLabel.setIcon(new ImageIcon(HighGui.toBufferedImage(src)));
+		imgLabel.setIcon(new ImageIcon(HighGui.toBufferedImage(copy)));
 		frame.repaint();
 	}
 
-	private Point[][] extractChessboardCoordinates() {
-		Point[][] centerBoxPoints = new Point[8][8];
+	private void extractChessboardCoordinates() {
+		Monitor mon = MonitorFactory.start("chessboard information extraction");
+
+		centerBoxPoints = new Point[8][8];
+		squaresRectangles = new Rect[8][8];
 
 		MatOfPoint2f corners = new MatOfPoint2f();
-		boolean allSquaresFound = false;
+		boolean squaresFound = false;
 		boolean isChessboard = false;
 		int squareCorners = 15;
 
-		while (!allSquaresFound) {
+		while (!squaresFound) {
+			logger.debug("Is a chessboard?:{} in size:{}", isChessboard, squareCorners);
+
 			if (squareCorners <= 0) {
-				return null;
+				return;
 			}
 
 			--squareCorners;
@@ -256,11 +280,9 @@ class Threshold {
 			Calib3d.findChessboardCorners(srcGray, squaresSize, corners,
 					Calib3d.CALIB_CB_ADAPTIVE_THRESH + Calib3d.CALIB_CB_NORMALIZE_IMAGE + Calib3d.CALIB_CB_FAST_CHECK);
 			if (corners.rows() > 0 && corners.cols() > 0) {
-				allSquaresFound = true;
+				squaresFound = true;
 			}
 		}
-
-		logger.debug("Is a chessboard?:{} in size:{}", isChessboard, squareCorners);
 
 //			Calib3d.drawChessboardCorners(srcGray, squaresSize, corners, isChessboard);
 
@@ -300,27 +322,51 @@ class Threshold {
 
 		double centerOfBoxX;
 		double centerOfBoxY = firstTopCorner + (squareHeight / 2);
+		int cornerInX;
+		int cornerInY = (int) firstTopCorner;
 
 		for (int y = 0; y < 8; ++y) {
 			centerOfBoxX = firstLeftCorner + (squareWidth / 2);
+			cornerInX = (int) firstLeftCorner;
 
 			for (int x = 0; x < 8; ++x) {
 				centerBoxPoints[x][y] = new Point(centerOfBoxX, centerOfBoxY);
+				squaresRectangles[x][y] = new Rect(cornerInX, cornerInY, (int) squareWidth, (int) squareHeight);
 
-				Imgproc.circle(src, // Matrix obj of the image
+				centerOfBoxX = centerOfBoxX + squareWidth;
+				cornerInX = (int) (cornerInX + squareWidth);
+			}
+
+			centerOfBoxY = centerOfBoxY + squareHeight;
+			cornerInY = (int) (cornerInY + squareHeight);
+		}
+
+		mon.stop();
+		logger.info("Chessboard information extraction:{}", mon);
+
+		showChessboardCoordinates();
+
+//		return centerBoxPoints;
+	}
+
+	private void showChessboardCoordinates() {
+		int squaresCount = 0;
+		for (int y = 0; y < 8; ++y) {
+			for (int x = 0; x < 8; ++x) {
+				Imgproc.circle(copy, // Matrix obj of the image
 						centerBoxPoints[x][y], // Center of the circle
 						5, // Radius
 						new Scalar(255, 128, 0), // Scalar object for color
 						2 // Thickness of the circle
 				);
 
-				centerOfBoxX = centerOfBoxX + squareWidth;
+				Imgproc.rectangle(copy, squaresRectangles[x][y], new Scalar(255, 128, 255));
+				Imgproc.putText(copy, String.valueOf(squaresCount + 1), centerBoxPoints[x][y],
+						Imgproc.FONT_HERSHEY_COMPLEX_SMALL, 0.9, new Scalar(0, 255, 255));
+
+				++squaresCount;
 			}
-
-			centerOfBoxY = centerOfBoxY + squareHeight;
 		}
-
-		return centerBoxPoints;
 	}
 }
 
