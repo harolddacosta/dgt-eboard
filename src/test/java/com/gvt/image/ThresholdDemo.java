@@ -23,7 +23,6 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
-import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.highgui.HighGui;
@@ -45,16 +44,15 @@ class Threshold {
 	private JLabel imgLabel;
 	private static final int MAX_THRESHOLD = 100;
 	private int maxCorners = 23;
-	private double minCanny = 5;
-	private double maxCanny = 75;
-	private int squares = 16;
+	private int minCanny = 5;
+	private int maxCanny = 75;
+	private int squares = 6;
 	private Random rng = new Random(12345);
 
 	public Threshold(String[] args) {
 		/// Load source image and convert it to gray
-		String filename = args.length > 0 ? args[0]
-				: getClass().getClassLoader().getResource("onlyChessboard.bmp").getFile();
-		src = Imgcodecs.imread(filename);
+		String filename = args.length > 0 ? args[0] : getClass().getClassLoader().getResource("onlyChessboard.bmp").getFile();
+		src = Imgcodecs.imread("C:/Users/hdacosta/Development/eclipse-workspace-jsf2/dgt-protocol/target/test-classes/onlyChessboard.bmp");
 		if (src.empty()) {
 			System.err.println("Cannot read image: " + filename);
 			System.exit(0);
@@ -82,13 +80,13 @@ class Threshold {
 			return;
 		}
 
-		JPanel panel = new JPanel();
-		panel.setLayout(new GridLayout(3, 2));
-		pane.add(panel, BorderLayout.BEFORE_FIRST_LINE);
+		JPanel componentsPanel = new JPanel();
+		componentsPanel.setLayout(new GridLayout(3, 2));
+		pane.add(componentsPanel, BorderLayout.BEFORE_FIRST_LINE);
 
-		panel.add(addSlider1());
-		panel.add(addSlider2());
-		panel.add(addSlider3());
+		componentsPanel.add(addSlider1());
+		componentsPanel.add(addSlider2());
+		componentsPanel.add(addSlider3());
 
 		imgLabel = new JLabel(new ImageIcon(img));
 		pane.add(imgLabel, BorderLayout.CENTER);
@@ -99,12 +97,13 @@ class Threshold {
 		sliderPanel.setLayout(new BoxLayout(sliderPanel, BoxLayout.PAGE_AXIS));
 		sliderPanel.add(new JLabel("minCanny"));
 
-		JSlider slider = new JSlider(0, MAX_THRESHOLD, maxCorners);
+		JSlider slider = new JSlider(0, MAX_THRESHOLD, minCanny);
 		slider.setMajorTickSpacing(20);
 		slider.setMinorTickSpacing(10);
 		slider.setPaintTicks(true);
 		slider.setPaintLabels(true);
 		slider.addChangeListener(new ChangeListener() {
+
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				JSlider source = (JSlider) e.getSource();
@@ -128,12 +127,13 @@ class Threshold {
 		sliderPanel.setLayout(new BoxLayout(sliderPanel, BoxLayout.PAGE_AXIS));
 		sliderPanel.add(new JLabel("maxcanny:"));
 
-		JSlider slider = new JSlider(0, MAX_THRESHOLD, maxCorners);
+		JSlider slider = new JSlider(0, MAX_THRESHOLD, maxCanny);
 		slider.setMajorTickSpacing(20);
 		slider.setMinorTickSpacing(10);
 		slider.setPaintTicks(true);
 		slider.setPaintLabels(true);
 		slider.addChangeListener(new ChangeListener() {
+
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				JSlider source = (JSlider) e.getSource();
@@ -157,12 +157,13 @@ class Threshold {
 		sliderPanel.setLayout(new BoxLayout(sliderPanel, BoxLayout.PAGE_AXIS));
 		sliderPanel.add(new JLabel("squares:"));
 
-		JSlider slider = new JSlider(0, MAX_THRESHOLD, maxCorners);
+		JSlider slider = new JSlider(0, MAX_THRESHOLD, squares);
 		slider.setMajorTickSpacing(20);
 		slider.setMinorTickSpacing(10);
 		slider.setPaintTicks(true);
 		slider.setPaintLabels(true);
 		slider.addChangeListener(new ChangeListener() {
+
 			@Override
 			public void stateChanged(ChangeEvent e) {
 				JSlider source = (JSlider) e.getSource();
@@ -181,7 +182,7 @@ class Threshold {
 		/// Parameters for Shi-Tomasi algorithm
 		maxCorners = Math.max(maxCorners, 1);
 		List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-		MatOfPoint2f corners = new MatOfPoint2f();
+//		MatOfPoint2f corners = new MatOfPoint2f();
 		Mat hierarchy = new Mat();
 		double qualityLevel = 0.01;
 		double minDistance = 10;
@@ -191,34 +192,27 @@ class Threshold {
 
 		/// Copy the source image
 		Mat copy = src.clone();
+		Mat dest = Mat.zeros(copy.size(), CvType.CV_8UC3);
 		Imgproc.cvtColor(copy, srcGray, Imgproc.COLOR_BGR2GRAY);
 
 //		Imgproc.Canny(srcGray, srcGray, minCanny, maxCanny); // 5, 75
-//		Imgproc.findContours(cannyApplied, contours, hierarchy, Imgproc.RETR_TREE, Imgproc.CHAIN_APPROX_SIMPLE);
+//		Imgproc.findContours(srcGray, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+		// Draw contours in dest Mat
+//		Imgproc.drawContours(dest, contours, -1, new Scalar(255, 0, 0));
 //		Imgproc.cornerEigenValsAndVecs(cannyApplied, cannyApplied, blockSize, 1);
-		Size squaresSize = new Size(squares, squares);
-		Calib3d.findChessboardCorners(srcGray, squaresSize, corners,
-				Calib3d.CALIB_CB_ADAPTIVE_THRESH + Calib3d.CALIB_CB_NORMALIZE_IMAGE + Calib3d.CALIB_CB_FAST_CHECK);
-		logger.debug("Is a chessboard:{}", Calib3d.checkChessboard(srcGray, squaresSize));
-		Calib3d.drawChessboardCorners(srcGray, squaresSize, corners, Calib3d.checkChessboard(srcGray, squaresSize));
+		Point[][] centerBoxPoints = extractChessboardCoordinates();
 
-		for (int x = 0; x < corners.cols(); ++x) {
-			for (int y = 0; y < corners.rows(); ++y) {
-				logger.debug("Corner {}", corners.get(y, x));
-			}
-		}
-
-		Mat finalDraw = new Mat(cannyApplied.size(), CvType.CV_8U, Scalar.all(255));
-
-		for (int i = 0; i < contours.size(); i++) {
-			if (Imgproc.contourArea(contours.get(i)) > 60) {
-				Rect rect = Imgproc.boundingRect(contours.get(i));
+//		Mat finalDraw = new Mat(cannyApplied.size(), CvType.CV_8U, Scalar.all(255));
+//
+//		for (int i = 0; i < contours.size(); i++) {
+//			if (Imgproc.contourArea(contours.get(i)) > 60) {
+//				Rect rect = Imgproc.boundingRect(contours.get(i));
 //				if ((rect.height > 35 && rect.height < 60) && (rect.width > 35 && rect.width < 60)) {
 //				Imgproc.rectangle(copy, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),
 //						new Scalar(0, 0, 255));
 //				}
-			}
-		}
+//			}
+//		}
 
 		/// Apply corner detection
 //		Imgproc.goodFeaturesToTrack(srcGray, corners, maxCorners, qualityLevel, minDistance, new Mat(), blockSize,
@@ -234,12 +228,102 @@ class Threshold {
 //					new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256)), Imgproc.FILLED);
 //		}
 
-		imgLabel.setIcon(new ImageIcon(HighGui.toBufferedImage(srcGray)));
+		imgLabel.setIcon(new ImageIcon(HighGui.toBufferedImage(src)));
 		frame.repaint();
+	}
+
+	private Point[][] extractChessboardCoordinates() {
+		Point[][] centerBoxPoints = new Point[8][8];
+
+		boolean allSquaresFound = false;
+		int squareCorners = 15;
+
+		while (!allSquaresFound) {
+			--squareCorners;
+			Size squaresSize = new Size(squareCorners, squareCorners);
+
+			boolean isChessboard = Calib3d.checkChessboard(srcGray, squaresSize);
+			if (!isChessboard) {
+				continue;
+			}
+
+			MatOfPoint2f corners = new MatOfPoint2f();
+
+			Calib3d.findChessboardCorners(srcGray, squaresSize, corners,
+					Calib3d.CALIB_CB_ADAPTIVE_THRESH + Calib3d.CALIB_CB_NORMALIZE_IMAGE + Calib3d.CALIB_CB_FAST_CHECK);
+			if (corners.rows() == 0 || corners.cols() == 0) {
+				continue;
+			}
+
+			logger.debug("Is a chessboard?:{} in size:{}", isChessboard, squareCorners);
+
+//			Calib3d.drawChessboardCorners(srcGray, squaresSize, corners, isChessboard);
+
+			double squareWidth = corners.get(1, 0)[0] - corners.get(0, 0)[0];
+			double squareHeight = corners.get(squareCorners, 0)[1] - corners.get(0, 0)[1];
+			logger.trace("first coordinate:{}-{}", corners.get(0, 0)[0], corners.get(1, 0)[0]);
+			logger.trace("second coordinate:{}-{}", corners.get(0, 0)[1], corners.get(squareCorners, 0)[1]);
+			logger.trace("square width:{} square height:{}", squareWidth, squareHeight);
+
+			boolean foundFirstCorner = false;
+			double firstLeftCorner = corners.get(0, 0)[0];
+			while (!foundFirstCorner) {
+				if (firstLeftCorner - squareWidth >= 0) { // if there is space for other box
+					firstLeftCorner = firstLeftCorner - squareWidth;
+				} else {
+					foundFirstCorner = true;
+				}
+			}
+
+			foundFirstCorner = false;
+			double firstTopCorner = corners.get(0, 0)[1];
+			while (!foundFirstCorner) {
+				if (firstTopCorner - squareHeight >= 0) { // if there is space for other box
+					firstTopCorner = firstTopCorner - squareHeight;
+				} else {
+					foundFirstCorner = true;
+				}
+			}
+
+			logger.trace("first corner found:{}-{}", firstLeftCorner, firstTopCorner);
+
+			for (int y = 0; y < corners.rows(); ++y) {
+				for (int x = 0; x < corners.cols(); ++x) {
+					logger.debug("Corner y:{} x:{} {}", y, x, corners.get(y, x));
+				}
+			}
+
+			double centerOfBoxX;
+			double centerOfBoxY = firstTopCorner + (squareHeight / 2);
+
+			for (int y = 0; y < 8; ++y) {
+				centerOfBoxX = firstLeftCorner + (squareWidth / 2);
+
+				for (int x = 0; x < 8; ++x) {
+					centerBoxPoints[x][y] = new Point(centerOfBoxX, centerOfBoxY);
+
+					Imgproc.circle(src, // Matrix obj of the image
+							centerBoxPoints[x][y], // Center of the circle
+							5, // Radius
+							new Scalar(255, 128, 0), // Scalar object for color
+							2 // Thickness of the circle
+					);
+
+					centerOfBoxX = centerOfBoxX + squareWidth;
+				}
+
+				centerOfBoxY = centerOfBoxY + squareHeight;
+			}
+
+			allSquaresFound = true;
+		}
+
+		return centerBoxPoints;
 	}
 }
 
 public class ThresholdDemo {
+
 	public static void main(String[] args) {
 		// Load the native OpenCV library
 		OpenCV.loadShared();
@@ -248,6 +332,7 @@ public class ThresholdDemo {
 		// Schedule a job for the event dispatch thread:
 		// creating and showing this application's GUI.
 		javax.swing.SwingUtilities.invokeLater(new Runnable() {
+
 			@Override
 			public void run() {
 				new Threshold(args);
