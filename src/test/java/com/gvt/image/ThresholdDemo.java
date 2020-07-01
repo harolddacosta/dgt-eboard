@@ -235,87 +235,89 @@ class Threshold {
 	private Point[][] extractChessboardCoordinates() {
 		Point[][] centerBoxPoints = new Point[8][8];
 
+		MatOfPoint2f corners = new MatOfPoint2f();
 		boolean allSquaresFound = false;
+		boolean isChessboard = false;
 		int squareCorners = 15;
 
 		while (!allSquaresFound) {
+			if (squareCorners <= 0) {
+				return null;
+			}
+
 			--squareCorners;
 			Size squaresSize = new Size(squareCorners, squareCorners);
 
-			boolean isChessboard = Calib3d.checkChessboard(srcGray, squaresSize);
+			isChessboard = Calib3d.checkChessboard(srcGray, squaresSize);
 			if (!isChessboard) {
 				continue;
 			}
 
-			MatOfPoint2f corners = new MatOfPoint2f();
-
 			Calib3d.findChessboardCorners(srcGray, squaresSize, corners,
 					Calib3d.CALIB_CB_ADAPTIVE_THRESH + Calib3d.CALIB_CB_NORMALIZE_IMAGE + Calib3d.CALIB_CB_FAST_CHECK);
-			if (corners.rows() == 0 || corners.cols() == 0) {
-				continue;
+			if (corners.rows() > 0 && corners.cols() > 0) {
+				allSquaresFound = true;
 			}
+		}
 
-			logger.debug("Is a chessboard?:{} in size:{}", isChessboard, squareCorners);
+		logger.debug("Is a chessboard?:{} in size:{}", isChessboard, squareCorners);
 
 //			Calib3d.drawChessboardCorners(srcGray, squaresSize, corners, isChessboard);
 
-			double squareWidth = corners.get(1, 0)[0] - corners.get(0, 0)[0];
-			double squareHeight = corners.get(squareCorners, 0)[1] - corners.get(0, 0)[1];
-			logger.trace("first coordinate:{}-{}", corners.get(0, 0)[0], corners.get(1, 0)[0]);
-			logger.trace("second coordinate:{}-{}", corners.get(0, 0)[1], corners.get(squareCorners, 0)[1]);
-			logger.trace("square width:{} square height:{}", squareWidth, squareHeight);
+		double squareWidth = corners.get(1, 0)[0] - corners.get(0, 0)[0];
+		double squareHeight = corners.get(squareCorners, 0)[1] - corners.get(0, 0)[1];
+		logger.trace("first coordinate:{}-{}", corners.get(0, 0)[0], corners.get(1, 0)[0]);
+		logger.trace("second coordinate:{}-{}", corners.get(0, 0)[1], corners.get(squareCorners, 0)[1]);
+		logger.trace("square width:{} square height:{}", squareWidth, squareHeight);
 
-			boolean foundFirstCorner = false;
-			double firstLeftCorner = corners.get(0, 0)[0];
-			while (!foundFirstCorner) {
-				if (firstLeftCorner - squareWidth >= 0) { // if there is space for other box
-					firstLeftCorner = firstLeftCorner - squareWidth;
-				} else {
-					foundFirstCorner = true;
-				}
+		boolean foundFirstCorner = false;
+		double firstLeftCorner = corners.get(0, 0)[0];
+		while (!foundFirstCorner) {
+			if (firstLeftCorner - squareWidth >= 0) { // if there is space for other box
+				firstLeftCorner = firstLeftCorner - squareWidth;
+			} else {
+				foundFirstCorner = true;
+			}
+		}
+
+		foundFirstCorner = false;
+		double firstTopCorner = corners.get(0, 0)[1];
+		while (!foundFirstCorner) {
+			if (firstTopCorner - squareHeight >= 0) { // if there is space for other box
+				firstTopCorner = firstTopCorner - squareHeight;
+			} else {
+				foundFirstCorner = true;
+			}
+		}
+
+		logger.trace("first corner found:{}-{}", firstLeftCorner, firstTopCorner);
+
+		for (int y = 0; y < corners.rows(); ++y) {
+			for (int x = 0; x < corners.cols(); ++x) {
+				logger.debug("Corner y:{} x:{} {}", y, x, corners.get(y, x));
+			}
+		}
+
+		double centerOfBoxX;
+		double centerOfBoxY = firstTopCorner + (squareHeight / 2);
+
+		for (int y = 0; y < 8; ++y) {
+			centerOfBoxX = firstLeftCorner + (squareWidth / 2);
+
+			for (int x = 0; x < 8; ++x) {
+				centerBoxPoints[x][y] = new Point(centerOfBoxX, centerOfBoxY);
+
+				Imgproc.circle(src, // Matrix obj of the image
+						centerBoxPoints[x][y], // Center of the circle
+						5, // Radius
+						new Scalar(255, 128, 0), // Scalar object for color
+						2 // Thickness of the circle
+				);
+
+				centerOfBoxX = centerOfBoxX + squareWidth;
 			}
 
-			foundFirstCorner = false;
-			double firstTopCorner = corners.get(0, 0)[1];
-			while (!foundFirstCorner) {
-				if (firstTopCorner - squareHeight >= 0) { // if there is space for other box
-					firstTopCorner = firstTopCorner - squareHeight;
-				} else {
-					foundFirstCorner = true;
-				}
-			}
-
-			logger.trace("first corner found:{}-{}", firstLeftCorner, firstTopCorner);
-
-			for (int y = 0; y < corners.rows(); ++y) {
-				for (int x = 0; x < corners.cols(); ++x) {
-					logger.debug("Corner y:{} x:{} {}", y, x, corners.get(y, x));
-				}
-			}
-
-			double centerOfBoxX;
-			double centerOfBoxY = firstTopCorner + (squareHeight / 2);
-
-			for (int y = 0; y < 8; ++y) {
-				centerOfBoxX = firstLeftCorner + (squareWidth / 2);
-
-				for (int x = 0; x < 8; ++x) {
-					centerBoxPoints[x][y] = new Point(centerOfBoxX, centerOfBoxY);
-
-					Imgproc.circle(src, // Matrix obj of the image
-							centerBoxPoints[x][y], // Center of the circle
-							5, // Radius
-							new Scalar(255, 128, 0), // Scalar object for color
-							2 // Thickness of the circle
-					);
-
-					centerOfBoxX = centerOfBoxX + squareWidth;
-				}
-
-				centerOfBoxY = centerOfBoxY + squareHeight;
-			}
-
-			allSquaresFound = true;
+			centerOfBoxY = centerOfBoxY + squareHeight;
 		}
 
 		return centerBoxPoints;
