@@ -4,21 +4,30 @@ import java.awt.BorderLayout;
 import java.awt.Container;
 import java.awt.GridLayout;
 import java.awt.Image;
+import java.awt.Rectangle;
+import java.awt.Robot;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.imageio.ImageIO;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.Timer;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.opencv.calib3d.Calib3d;
-import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfPoint;
 import org.opencv.core.MatOfPoint2f;
 import org.opencv.core.Point;
@@ -43,9 +52,9 @@ class Threshold {
 	private Mat src = new Mat();
 	private Mat srcGray = new Mat();
 	private Mat copy = new Mat();
-	private JFrame frame;
+	public JFrame frame;
 	private JLabel imgLabel;
-	private static final int MAX_THRESHOLD = 100;
+	private static final int MAX_THRESHOLD = 500;
 	private int maxCorners = 23;
 	private int minCanny = 5;
 	private int maxCanny = 75;
@@ -57,10 +66,9 @@ class Threshold {
 
 	public Threshold(String[] args) {
 		/// Load source image and convert it to gray
-		String filename = args.length > 0 ? args[0]
-				: getClass().getClassLoader().getResource("onlyChessboard.bmp").getFile();
-//		src = Imgcodecs.imread("C:/Users/hdacosta/Development/eclipse-workspace-jsf2/dgt-protocol/target/test-classes/onlyChessboard.bmp");
-		src = Imgcodecs.imread(filename);
+		String filename = args.length > 0 ? args[0] : getClass().getClassLoader().getResource("onlyChessboard.bmp").getFile();
+		src = Imgcodecs.imread("C:/Users/hdacosta/Development/eclipse-workspace-jsf2/dgt-protocol/target/test-classes/onlyChessboard.bmp");
+//		src = Imgcodecs.imread(filename);
 		if (src.empty()) {
 			System.err.println("Cannot read image: " + filename);
 			System.exit(0);
@@ -79,7 +87,17 @@ class Threshold {
 		// Display the window.
 		frame.pack();
 		frame.setVisible(true);
-		update();
+
+		int timerDelay = 1000;
+		new Timer(timerDelay, new ActionListener() {
+
+			private int counter = 0;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				update();
+			}
+		}).start();
 	}
 
 	private void addComponentsToPane(Container pane, Image img) {
@@ -186,58 +204,67 @@ class Threshold {
 		return sliderPanel;
 	}
 
-	private void update() {
+	public void update() {
 		/// Parameters for Shi-Tomasi algorithm
-		maxCorners = Math.max(maxCorners, 1);
+//		maxCorners = Math.max(maxCorners, 1);
 		List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
 //		MatOfPoint2f corners = new MatOfPoint2f();
 		Mat hierarchy = new Mat();
-		double qualityLevel = 0.01;
-		double minDistance = 10;
-		int blockSize = 3, gradientSize = 3;
-		boolean useHarrisDetector = false;
-		double k = 0.04;
+//		double qualityLevel = 0.01;
+//		double minDistance = 10;
+//		int blockSize = 3, gradientSize = 3;
+//		boolean useHarrisDetector = false;
+//		double k = 0.04;
 
-		/// Copy the source image
-		copy = src.clone();
+		Robot robot;
+		try {
+			robot = new Robot();
+
+			BufferedImage screenFullImage = robot.createScreenCapture(new Rectangle(2557, 125, 793, 793));
+			src = BufferedImage2Mat(screenFullImage);
+
+			/// Copy the source image
+			copy = src.clone();
 //		Mat dest = Mat.zeros(copy.size(), CvType.CV_8UC3);
-		srcGray = new Mat();
-		Imgproc.cvtColor(copy, srcGray, Imgproc.COLOR_BGR2GRAY);
+			srcGray = new Mat();
+			Imgproc.cvtColor(copy, srcGray, Imgproc.COLOR_BGR2GRAY);
 
-		extractChessboardCoordinates();
-		double squareWidth = centerBoxPoints[1][0].x - centerBoxPoints[0][0].x;
-		double squareHeight = centerBoxPoints[0][1].y - centerBoxPoints[0][0].y;
+			extractChessboardCoordinates();
+			double squareWidth = centerBoxPoints[1][0].x - centerBoxPoints[0][0].x;
+			double squareHeight = centerBoxPoints[0][1].y - centerBoxPoints[0][0].y;
+//
+			logger.debug("Square width:{}", squareWidth);
+			logger.debug("Square height:{}", squareHeight);
 
-		logger.debug("Square width:{}", squareWidth);
-		logger.debug("Square height:{}", squareHeight);
+			squareWidth = squareWidth - (squareWidth * 0.01);
+			squareHeight = squareHeight - (squareHeight * 0.01);
 
-		Imgproc.Canny(srcGray, srcGray, minCanny, maxCanny); // 5, 75
-		Imgproc.findContours(srcGray, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-		// Draw contours in dest Mat
+//			Imgproc.Canny(srcGray, srcGray, minCanny, maxCanny); // 5, 75
+			Imgproc.threshold(srcGray, srcGray, minCanny, maxCanny, Imgproc.THRESH_BINARY_INV); // 50-255
+			Imgproc.findContours(srcGray, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+			// Draw contours in dest Mat
 //		Imgproc.drawContours(dest, contours, -1, new Scalar(255, 0, 0));
 //		Imgproc.cornerEigenValsAndVecs(cannyApplied, cannyApplied, blockSize, 1);
 
 //		Mat finalDraw = new Mat(cannyApplied.size(), CvType.CV_8U, Scalar.all(255));
 //
-		squareWidth = squareWidth - (squareWidth * 0.02);
-		squareHeight = squareHeight - (squareHeight * 0.02);
-		int minSize = 8;
-		for (int i = 0; i < contours.size(); i++) {
-//			if (Imgproc.contourArea(contours.get(i)) > 10) {
-			Rect rect = Imgproc.boundingRect(contours.get(i));
-			if ((rect.height > minSize && rect.height < squareHeight)
-					&& (rect.width > minSize && rect.width < squareWidth)) {
-			Imgproc.rectangle(copy, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),
-					new Scalar(255, 255, 0));
-			}
-//			}
-		}
 
-		/// Apply corner detection
+			int minSize = 2;
+			for (int i = 0; i < contours.size(); i++) {
+//			if (Imgproc.contourArea(contours.get(i)) > 10) {
+				Rect rect = Imgproc.boundingRect(contours.get(i));
+//				if ((rect.height > minSize && rect.height < squareHeight) && (rect.width > minSize && rect.width < squareWidth)) {
+				Imgproc.rectangle(copy, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),
+						new Scalar(255, 255, 0));
+//				}
+//			}
+			}
+
+			/// Apply corner detection
 //		Imgproc.goodFeaturesToTrack(srcGray, corners, maxCorners, qualityLevel, minDistance, new Mat(), blockSize,
 //				gradientSize, useHarrisDetector, k);
 
-		/// Draw corners detected
+			/// Draw corners detected
 //		System.out.println("** Number of corners detected: " + corners.rows());
 //		int[] cornersData = new int[(int) (corners.total() * corners.channels())];
 //		corners.get(0, 0, cornersData);
@@ -247,8 +274,12 @@ class Threshold {
 //					new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256)), Imgproc.FILLED);
 //		}
 
-		imgLabel.setIcon(new ImageIcon(HighGui.toBufferedImage(copy)));
-		frame.repaint();
+			imgLabel.setIcon(new ImageIcon(HighGui.toBufferedImage(copy)));
+			frame.repaint();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	private void extractChessboardCoordinates() {
@@ -361,12 +392,20 @@ class Threshold {
 				);
 
 				Imgproc.rectangle(copy, squaresRectangles[x][y], new Scalar(255, 128, 255));
-				Imgproc.putText(copy, String.valueOf(squaresCount + 1), centerBoxPoints[x][y],
-						Imgproc.FONT_HERSHEY_COMPLEX_SMALL, 0.9, new Scalar(0, 255, 255));
+				Imgproc.putText(copy, String.valueOf(squaresCount + 1), centerBoxPoints[x][y], Imgproc.FONT_HERSHEY_COMPLEX_SMALL, 0.9,
+						new Scalar(0, 255, 255));
 
 				++squaresCount;
 			}
 		}
+	}
+
+	private Mat BufferedImage2Mat(BufferedImage image) throws IOException {
+		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+		ImageIO.write(image, "jpg", byteArrayOutputStream);
+		byteArrayOutputStream.flush();
+
+		return Imgcodecs.imdecode(new MatOfByte(byteArrayOutputStream.toByteArray()), Imgcodecs.IMREAD_UNCHANGED);
 	}
 }
 
@@ -383,7 +422,7 @@ public class ThresholdDemo {
 
 			@Override
 			public void run() {
-				new Threshold(args);
+				Threshold thres = new Threshold(args);
 			}
 		});
 	}
