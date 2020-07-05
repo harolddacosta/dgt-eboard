@@ -52,16 +52,21 @@ class Threshold {
 	public JFrame frame;
 	private JLabel imgLabel;
 	private static final int MAX_THRESHOLD = 500;
-	private int maxCorners = 23;
+//	private int maxCorners = 23;
 	private int minCanny = 125;
 	private int maxCanny = 255;
 	private int squares = 6;
-	private boolean chessboardInfoExtracted = false;
 
 	// Data for chessboard
 	private Point[][] centerBoxPoints = new Point[8][8];
 	private Rect[][] squaresRectangles = new Rect[8][8];
 	private Rect[][] piecesInSquares = new Rect[8][8];
+
+	private boolean chessboardInfoExtracted = false;
+	private boolean whitePiecesBottom = false;
+
+	private Mat[] whitePieces = new Mat[6];
+	private Mat[] blackPieces = new Mat[6];
 
 	public Threshold(String[] args) {
 		/// Load source image and convert it to gray
@@ -228,6 +233,7 @@ class Threshold {
 //		Mat dest = Mat.zeros(copy.size(), CvType.CV_8UC3);
 			srcGray = new Mat();
 			Imgproc.cvtColor(copy, srcGray, Imgproc.COLOR_BGR2GRAY);
+
 			extractChessboardCoordinates();
 			showChessboardCoordinates(copy);
 
@@ -265,15 +271,15 @@ class Threshold {
 //			}
 			}
 
-			logger.trace("********************************************");
-			for (int y = 0; y < 8; ++y) {
-				for (int x = 0; x < 8; ++x) {
-					if (piecesInSquares[x][y] != null) {
-						logger.trace("There is a piece in:{}:{}", x, y);
-					}
-				}
+			if (checkForInitialPosition()) {
+				// restart a game, scan for pieces to compare later
+
+				recognizePiecesColor();
+
+				cropImagesToCompare();
+
+				createFEN();
 			}
-			logger.trace("********************************************");
 
 			/// Apply corner detection
 //		Imgproc.goodFeaturesToTrack(srcGray, corners, maxCorners, qualityLevel, minDistance, new Mat(), blockSize,
@@ -289,7 +295,7 @@ class Threshold {
 //					new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256)), Imgproc.FILLED);
 //		}
 
-			imgLabel.setIcon(new ImageIcon(HighGui.toBufferedImage(copy)));
+			imgLabel.setIcon(new ImageIcon(HighGui.toBufferedImage(srcGray)));
 			frame.repaint();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -297,9 +303,107 @@ class Threshold {
 		}
 	}
 
-	private void putPieceInsideSquare(Rect potencialPieceShape) {
-		logger.trace("Trying to put a piece!");
+	private void createFEN() {
+		for (int y = 0; y < 8; ++y) {
+			for (int x = 0; x < 8; ++x) {
+				if (piecesInSquares[x][y] != null) {
+//					Imgproc.matchTemplate
+				}
+			}
+		}
+	}
 
+	private void cropImagesToCompare() {
+		// Positions for array
+		// 0=Pawn, 1=Rook, 2=Knight, 3=Bishop, 4=Queen, 5=King
+		if (whitePiecesBottom) {
+			whitePieces[0] = srcGray.submat(piecesInSquares[0][6]);
+			whitePieces[1] = srcGray.submat(piecesInSquares[0][7]);
+			whitePieces[2] = srcGray.submat(piecesInSquares[1][7]);
+			whitePieces[3] = srcGray.submat(piecesInSquares[2][7]);
+			whitePieces[4] = srcGray.submat(piecesInSquares[3][7]);
+			whitePieces[5] = srcGray.submat(piecesInSquares[4][7]);
+
+			blackPieces[0] = srcGray.submat(piecesInSquares[0][1]);
+			blackPieces[1] = srcGray.submat(piecesInSquares[0][0]);
+			blackPieces[2] = srcGray.submat(piecesInSquares[1][0]);
+			blackPieces[3] = srcGray.submat(piecesInSquares[2][0]);
+			blackPieces[4] = srcGray.submat(piecesInSquares[3][0]);
+			blackPieces[5] = srcGray.submat(piecesInSquares[4][0]);
+		} else {
+			whitePieces[0] = srcGray.submat(piecesInSquares[0][1]);
+			whitePieces[1] = srcGray.submat(piecesInSquares[0][0]);
+			whitePieces[2] = srcGray.submat(piecesInSquares[1][0]);
+			whitePieces[3] = srcGray.submat(piecesInSquares[2][0]);
+			whitePieces[5] = srcGray.submat(piecesInSquares[3][0]);
+			whitePieces[4] = srcGray.submat(piecesInSquares[4][0]);
+
+			blackPieces[0] = srcGray.submat(piecesInSquares[0][6]);
+			blackPieces[1] = srcGray.submat(piecesInSquares[0][7]);
+			blackPieces[2] = srcGray.submat(piecesInSquares[1][7]);
+			blackPieces[3] = srcGray.submat(piecesInSquares[2][7]);
+			blackPieces[5] = srcGray.submat(piecesInSquares[3][7]);
+			blackPieces[4] = srcGray.submat(piecesInSquares[4][7]);
+		}
+	}
+
+	private void recognizePiecesColor() {
+		Mat piece = srcGray.submat(piecesInSquares[0][1]);
+		int qtyColorPixelsTop = 0;
+		for (int a = 0; a < piece.rows(); a++) {
+			for (int b = 0; b < piece.cols(); b++) {
+				if (piece.get(a, b)[0] == 255) {
+					qtyColorPixelsTop++;
+				}
+			}
+		}
+
+		///////////////////////
+		piece = srcGray.submat(piecesInSquares[0][6]);
+		int qtyColorPixelsBottom = 0;
+		for (int a = 0; a < piece.rows(); a++) {
+			for (int b = 0; b < piece.cols(); b++) {
+				if (piece.get(a, b)[0] == 255) {
+					qtyColorPixelsBottom++;
+				}
+			}
+		}
+
+		if (qtyColorPixelsTop > qtyColorPixelsBottom) {
+			whitePiecesBottom = true;
+		}
+
+		logger.trace("White pieces bottom? {}", whitePiecesBottom);
+	}
+
+	private boolean checkForInitialPosition() {
+		boolean retValue = true;
+
+		int qtyPieces = 0;
+		for (int y = 0; y < 8 && retValue == true; ++y) {
+			for (int x = 0; x < 8; ++x) {
+				if (piecesInSquares[x][y] != null) {
+					logger.trace("There is a piece in:{}:{}", x, y);
+
+					if (y > 1 && y < 6) {
+						retValue = false;
+
+						break;
+					}
+
+					qtyPieces++;
+				}
+			}
+		}
+
+		if (qtyPieces < 32) {
+			retValue = false;
+		}
+
+		return retValue;
+	}
+
+	private void putPieceInsideSquare(Rect potencialPieceShape) {
 		for (int y = 0; y < 8; ++y) {
 			for (int x = 0; x < 8; ++x) {
 				if (potencialPieceShape.tl().x >= squaresRectangles[x][y].tl().x
