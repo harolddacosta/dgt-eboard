@@ -56,8 +56,8 @@ class Threshold {
 	private JLabel imgLabel;
 	private static final int MAX_THRESHOLD = 500;
 	private int maxCorners = 23;
-	private int minCanny = 5;
-	private int maxCanny = 75;
+	private int minCanny = 125;
+	private int maxCanny = 255;
 	private int squares = 6;
 
 	// Data for chessboard
@@ -75,6 +75,7 @@ class Threshold {
 		}
 
 		Imgproc.cvtColor(src, srcGray, Imgproc.COLOR_BGR2GRAY);
+		extractChessboardCoordinates();
 
 		// Create and set up the window.
 		frame = new JFrame("Shi-Tomasi corner detector demo");
@@ -87,8 +88,9 @@ class Threshold {
 		// Display the window.
 		frame.pack();
 		frame.setVisible(true);
+//		update();
 
-		int timerDelay = 1000;
+		int timerDelay = 100;
 		new Timer(timerDelay, new ActionListener() {
 
 			private int counter = 0;
@@ -220,7 +222,7 @@ class Threshold {
 		try {
 			robot = new Robot();
 
-			BufferedImage screenFullImage = robot.createScreenCapture(new Rectangle(2557, 125, 793, 793));
+			BufferedImage screenFullImage = robot.createScreenCapture(new Rectangle(2555, 126, 793, 793));
 			src = BufferedImage2Mat(screenFullImage);
 
 			/// Copy the source image
@@ -229,10 +231,9 @@ class Threshold {
 			srcGray = new Mat();
 			Imgproc.cvtColor(copy, srcGray, Imgproc.COLOR_BGR2GRAY);
 
-			extractChessboardCoordinates();
 			double squareWidth = centerBoxPoints[1][0].x - centerBoxPoints[0][0].x;
 			double squareHeight = centerBoxPoints[0][1].y - centerBoxPoints[0][0].y;
-//
+
 			logger.debug("Square width:{}", squareWidth);
 			logger.debug("Square height:{}", squareHeight);
 
@@ -240,7 +241,7 @@ class Threshold {
 			squareHeight = squareHeight - (squareHeight * 0.01);
 
 //			Imgproc.Canny(srcGray, srcGray, minCanny, maxCanny); // 5, 75
-			Imgproc.threshold(srcGray, srcGray, minCanny, maxCanny, Imgproc.THRESH_BINARY_INV); // 50-255
+			Imgproc.threshold(srcGray, srcGray, minCanny, maxCanny, Imgproc.THRESH_BINARY_INV); // 110-255
 			Imgproc.findContours(srcGray, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 			// Draw contours in dest Mat
 //		Imgproc.drawContours(dest, contours, -1, new Scalar(255, 0, 0));
@@ -249,14 +250,15 @@ class Threshold {
 //		Mat finalDraw = new Mat(cannyApplied.size(), CvType.CV_8U, Scalar.all(255));
 //
 
-			int minSize = 2;
+			int minSize = (int) (squareWidth * 0.1);
+//			int minSize = 0;
 			for (int i = 0; i < contours.size(); i++) {
 //			if (Imgproc.contourArea(contours.get(i)) > 10) {
 				Rect rect = Imgproc.boundingRect(contours.get(i));
-//				if ((rect.height > minSize && rect.height < squareHeight) && (rect.width > minSize && rect.width < squareWidth)) {
-				Imgproc.rectangle(copy, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),
-						new Scalar(255, 255, 0));
-//				}
+				if ((rect.height > minSize && rect.height < squareHeight) && (rect.width > minSize && rect.width < squareWidth)) {
+					Imgproc.rectangle(copy, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),
+							new Scalar(255, 255, 0));
+				}
 //			}
 			}
 
@@ -312,10 +314,10 @@ class Threshold {
 					Calib3d.CALIB_CB_ADAPTIVE_THRESH + Calib3d.CALIB_CB_NORMALIZE_IMAGE + Calib3d.CALIB_CB_FAST_CHECK);
 			if (corners.rows() > 0 && corners.cols() > 0) {
 				squaresFound = true;
+
+				Calib3d.drawChessboardCorners(copy, squaresSize, corners, isChessboard);
 			}
 		}
-
-//			Calib3d.drawChessboardCorners(srcGray, squaresSize, corners, isChessboard);
 
 		double squareWidth = corners.get(1, 0)[0] - corners.get(0, 0)[0];
 		double squareHeight = corners.get(squareCorners, 0)[1] - corners.get(0, 0)[1];
@@ -353,23 +355,24 @@ class Threshold {
 
 		double centerOfBoxX;
 		double centerOfBoxY = firstTopCorner + (squareHeight / 2);
-		int cornerInX;
-		int cornerInY = (int) firstTopCorner;
+		double cornerInX;
+		double cornerInY = firstTopCorner;
+		Size boxSize = new Size(squareWidth, squareHeight);
 
 		for (int y = 0; y < 8; ++y) {
 			centerOfBoxX = firstLeftCorner + (squareWidth / 2);
-			cornerInX = (int) firstLeftCorner;
+			cornerInX = firstLeftCorner;
 
 			for (int x = 0; x < 8; ++x) {
 				centerBoxPoints[x][y] = new Point(centerOfBoxX, centerOfBoxY);
-				squaresRectangles[x][y] = new Rect(cornerInX, cornerInY, (int) squareWidth, (int) squareHeight);
+				squaresRectangles[x][y] = new Rect(new Point(cornerInX, cornerInY), boxSize);
 
 				centerOfBoxX = centerOfBoxX + squareWidth;
-				cornerInX = (int) (cornerInX + squareWidth);
+				cornerInX = cornerInX + squareWidth;
 			}
 
 			centerOfBoxY = centerOfBoxY + squareHeight;
-			cornerInY = (int) (cornerInY + squareHeight);
+			cornerInY = cornerInY + squareHeight;
 		}
 
 		mon.stop();
