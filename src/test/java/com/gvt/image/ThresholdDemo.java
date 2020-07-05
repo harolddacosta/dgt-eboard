@@ -6,8 +6,6 @@ import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.Robot;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -21,7 +19,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
-import javax.swing.Timer;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -59,10 +56,12 @@ class Threshold {
 	private int minCanny = 125;
 	private int maxCanny = 255;
 	private int squares = 6;
+	private boolean chessboardInfoExtracted = false;
 
 	// Data for chessboard
 	private Point[][] centerBoxPoints = new Point[8][8];
 	private Rect[][] squaresRectangles = new Rect[8][8];
+	private Rect[][] piecesInSquares = new Rect[8][8];
 
 	public Threshold(String[] args) {
 		/// Load source image and convert it to gray
@@ -74,8 +73,7 @@ class Threshold {
 			System.exit(0);
 		}
 
-		Imgproc.cvtColor(src, srcGray, Imgproc.COLOR_BGR2GRAY);
-		extractChessboardCoordinates();
+//		Imgproc.cvtColor(src, srcGray, Imgproc.COLOR_BGR2GRAY);
 
 		// Create and set up the window.
 		frame = new JFrame("Shi-Tomasi corner detector demo");
@@ -88,18 +86,18 @@ class Threshold {
 		// Display the window.
 		frame.pack();
 		frame.setVisible(true);
-//		update();
+		update();
 
-		int timerDelay = 100;
-		new Timer(timerDelay, new ActionListener() {
-
-			private int counter = 0;
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				update();
-			}
-		}).start();
+//		int timerDelay = 100;
+//		new Timer(timerDelay, new ActionListener() {
+//
+//			private int counter = 0;
+//
+//			@Override
+//			public void actionPerformed(ActionEvent e) {
+//				update();
+//			}
+//		}).start();
 	}
 
 	private void addComponentsToPane(Container pane, Image img) {
@@ -230,18 +228,20 @@ class Threshold {
 //		Mat dest = Mat.zeros(copy.size(), CvType.CV_8UC3);
 			srcGray = new Mat();
 			Imgproc.cvtColor(copy, srcGray, Imgproc.COLOR_BGR2GRAY);
+			extractChessboardCoordinates();
+			showChessboardCoordinates(copy);
 
 			double squareWidth = centerBoxPoints[1][0].x - centerBoxPoints[0][0].x;
 			double squareHeight = centerBoxPoints[0][1].y - centerBoxPoints[0][0].y;
 
-			logger.debug("Square width:{}", squareWidth);
-			logger.debug("Square height:{}", squareHeight);
+//			logger.debug("Square width:{}", squareWidth);
+//			logger.debug("Square height:{}", squareHeight);
 
 			squareWidth = squareWidth - (squareWidth * 0.01);
 			squareHeight = squareHeight - (squareHeight * 0.01);
 
 //			Imgproc.Canny(srcGray, srcGray, minCanny, maxCanny); // 5, 75
-			Imgproc.threshold(srcGray, srcGray, minCanny, maxCanny, Imgproc.THRESH_BINARY_INV); // 110-255
+			Imgproc.threshold(srcGray, srcGray, minCanny, maxCanny, Imgproc.THRESH_BINARY_INV); // 125-255
 			Imgproc.findContours(srcGray, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 			// Draw contours in dest Mat
 //		Imgproc.drawContours(dest, contours, -1, new Scalar(255, 0, 0));
@@ -250,17 +250,30 @@ class Threshold {
 //		Mat finalDraw = new Mat(cannyApplied.size(), CvType.CV_8U, Scalar.all(255));
 //
 
-			int minSize = (int) (squareWidth * 0.1);
+			int minSize = (int) (squareWidth * 0.2);
 //			int minSize = 0;
+			logger.trace("Contours size:{}", contours.size());
+			piecesInSquares = new Rect[8][8];
 			for (int i = 0; i < contours.size(); i++) {
 //			if (Imgproc.contourArea(contours.get(i)) > 10) {
 				Rect rect = Imgproc.boundingRect(contours.get(i));
 				if ((rect.height > minSize && rect.height < squareHeight) && (rect.width > minSize && rect.width < squareWidth)) {
-					Imgproc.rectangle(copy, new Point(rect.x, rect.y), new Point(rect.x + rect.width, rect.y + rect.height),
-							new Scalar(255, 255, 0));
+					Imgproc.rectangle(copy, rect, new Scalar(255, 255, 0));
+
+					putPieceInsideSquare(rect);
 				}
 //			}
 			}
+
+			logger.trace("********************************************");
+			for (int y = 0; y < 8; ++y) {
+				for (int x = 0; x < 8; ++x) {
+					if (piecesInSquares[x][y] != null) {
+						logger.trace("There is a piece in:{}:{}", x, y);
+					}
+				}
+			}
+			logger.trace("********************************************");
 
 			/// Apply corner detection
 //		Imgproc.goodFeaturesToTrack(srcGray, corners, maxCorners, qualityLevel, minDistance, new Mat(), blockSize,
@@ -284,8 +297,44 @@ class Threshold {
 		}
 	}
 
+	private void putPieceInsideSquare(Rect potencialPieceShape) {
+		logger.trace("Trying to put a piece!");
+
+		for (int y = 0; y < 8; ++y) {
+			for (int x = 0; x < 8; ++x) {
+				if (potencialPieceShape.tl().x >= squaresRectangles[x][y].tl().x
+						&& potencialPieceShape.br().x <= squaresRectangles[x][y].br().x
+						&& potencialPieceShape.tl().y >= squaresRectangles[x][y].tl().y
+						&& potencialPieceShape.br().y <= squaresRectangles[x][y].br().y) {
+					logger.trace("potencialPieceShape rect:{},{},{},{}", potencialPieceShape.tl().x, potencialPieceShape.tl().y,
+							potencialPieceShape.br().x, potencialPieceShape.br().y);
+					logger.trace("squaresRectangles rect:{},{},{},{}", squaresRectangles[x][y].tl().x, squaresRectangles[x][y].tl().y,
+							squaresRectangles[x][y].br().x, squaresRectangles[x][y].br().y);
+//					logger.trace("potencialPieceShape.br().y:{}", potencialPieceShape.br().y);
+//					logger.trace("squaresRectangles[x][y].br().y:{}", squaresRectangles[x][y].br().y);
+
+					if (piecesInSquares[x][y] != null) { // already contains a piece, check for larger
+						if (piecesInSquares[x][y].area() < potencialPieceShape.area()) {
+							piecesInSquares[x][y] = potencialPieceShape;
+
+							logger.trace("replacing a piece in {}:{}", x, y);
+						}
+					} else {
+						piecesInSquares[x][y] = potencialPieceShape;
+
+						logger.trace("putting a new piece in {}:{}", x, y);
+					}
+				}
+			}
+		}
+	}
+
 	private void extractChessboardCoordinates() {
-		Monitor mon = MonitorFactory.start("chessboard information extraction");
+		if (chessboardInfoExtracted) {
+			return;
+		}
+
+		Monitor mon = MonitorFactory.start("Chessboard information extraction");
 
 		centerBoxPoints = new Point[8][8];
 		squaresRectangles = new Rect[8][8];
@@ -321,9 +370,11 @@ class Threshold {
 
 		double squareWidth = corners.get(1, 0)[0] - corners.get(0, 0)[0];
 		double squareHeight = corners.get(squareCorners, 0)[1] - corners.get(0, 0)[1];
-		logger.trace("first coordinate:{}-{}", corners.get(0, 0)[0], corners.get(1, 0)[0]);
-		logger.trace("second coordinate:{}-{}", corners.get(0, 0)[1], corners.get(squareCorners, 0)[1]);
-		logger.trace("square width:{} square height:{}", squareWidth, squareHeight);
+//		double squareWidth = 96;
+//		double squareHeight = 96;
+		logger.trace("First coordinate:{}-{}", corners.get(0, 0)[0], corners.get(1, 0)[0]);
+		logger.trace("Second coordinate:{}-{}", corners.get(0, 0)[1], corners.get(squareCorners, 0)[1]);
+		logger.trace("Square width:{} Square height:{}", squareWidth, squareHeight);
 
 		boolean foundFirstCorner = false;
 		double firstLeftCorner = corners.get(0, 0)[0];
@@ -345,11 +396,11 @@ class Threshold {
 			}
 		}
 
-		logger.trace("first corner found:{}-{}", firstLeftCorner, firstTopCorner);
+		logger.trace("First corner found:{}-{}", firstLeftCorner, firstTopCorner);
 
 		for (int y = 0; y < corners.rows(); ++y) {
 			for (int x = 0; x < corners.cols(); ++x) {
-				logger.debug("Corner y:{} x:{} {}", y, x, corners.get(y, x));
+				logger.trace("Corner y:{} x:{} {}", y, x, corners.get(y, x));
 			}
 		}
 
@@ -378,12 +429,11 @@ class Threshold {
 		mon.stop();
 		logger.info("Chessboard information extraction:{}", mon);
 
-		showChessboardCoordinates();
-
+		chessboardInfoExtracted = true;
 //		return centerBoxPoints;
 	}
 
-	private void showChessboardCoordinates() {
+	private void showChessboardCoordinates(Mat copy) {
 		int squaresCount = 0;
 		for (int y = 0; y < 8; ++y) {
 			for (int x = 0; x < 8; ++x) {
@@ -404,11 +454,12 @@ class Threshold {
 	}
 
 	private Mat BufferedImage2Mat(BufferedImage image) throws IOException {
-		ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-		ImageIO.write(image, "jpg", byteArrayOutputStream);
-		byteArrayOutputStream.flush();
+		try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
+			ImageIO.write(image, "jpg", byteArrayOutputStream);
+//			byteArrayOutputStream.flush();
 
-		return Imgcodecs.imdecode(new MatOfByte(byteArrayOutputStream.toByteArray()), Imgcodecs.IMREAD_UNCHANGED);
+			return Imgcodecs.imdecode(new MatOfByte(byteArrayOutputStream.toByteArray()), Imgcodecs.IMREAD_UNCHANGED);
+		}
 	}
 }
 
