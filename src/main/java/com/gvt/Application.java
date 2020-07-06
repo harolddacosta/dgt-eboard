@@ -18,10 +18,10 @@ public class Application {
 	 * @throws Exception
 	 */
 	public static void main(String[] args) {
-		new MainWindows();
-
 		OpenCV.loadShared();
 		System.loadLibrary(org.opencv.core.Core.NATIVE_LIBRARY_NAME);
+
+		new MainWindows();
 	}
 
 }

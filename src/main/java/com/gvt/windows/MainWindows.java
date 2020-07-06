@@ -94,12 +94,17 @@ public class MainWindows {
 		// Now start the DLL
 		dgtEBoard.getDll()._DGTDLL_Init();
 		logger.debug("DLL Version:{}", dgtEBoard.getDll()._DGTDLL_GetVersion());
+//		dgtEBoard.getDll()._DGTDLL_UseFEN((byte) 1);
+		dgtEBoard.getDll()._DGTDLL_UseSAN((byte) 1);
 
 		// Register the callbacks
 		dgtEBoard.getDll()._DGTDLL_RegisterStatusFunc(dgtEBoard.getStatus());
 		dgtEBoard.getDll()._DGTDLL_RegisterScanFunc(dgtEBoard.getScan());
 		dgtEBoard.getDll()._DGTDLL_RegisterMagicPieceFunc(dgtEBoard.getMagic());
 		dgtEBoard.getDll()._DGTDLL_RegisterGameTypeChangedFunc(dgtEBoard.getType());
+
+		dgtEBoard.getDll()._DGTDLL_RegisterBlackMoveInputFunc(dgtEBoard.getBlackMoveInput());
+		dgtEBoard.getDll()._DGTDLL_RegisterWhiteMoveInputFunc(dgtEBoard.getWhiteMoveInput());
 
 		// Start a thread doing things
 		Thread worker = new WorkerThread(dgtEBoard);

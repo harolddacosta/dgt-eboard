@@ -16,6 +16,28 @@ public class DgtEBoardRabbit implements DgtEBoard {
 	private boolean running = true;
 	private DgtEBoardLib dll = null;
 
+	private DgtEBoardLib.CallbackFunctionCharPtr whiteMoveInput = data -> {
+		String str = data.getString(0);
+
+		logger.debug("Received WhiteMoveInput:{}", str);
+	};
+
+	@Override
+	public DgtEBoardLib.CallbackFunctionCharPtr getWhiteMoveInput() {
+		return whiteMoveInput;
+	}
+
+	private DgtEBoardLib.CallbackFunctionCharPtr blackMoveInput = data -> {
+		String str = data.getString(0);
+
+		logger.debug("Received BlackMoveInput:{}", str);
+	};
+
+	@Override
+	public DgtEBoardLib.CallbackFunctionCharPtr getBlackMoveInput() {
+		return blackMoveInput;
+	}
+
 	/**
 	 * Callback implementation function for the received status
 	 */
@@ -151,4 +173,5 @@ public class DgtEBoardRabbit implements DgtEBoard {
 	public DgtEBoardLib getDll() {
 		return dll;
 	}
+
 }

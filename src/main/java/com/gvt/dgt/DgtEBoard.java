@@ -1,6 +1,7 @@
 package com.gvt.dgt;
 
 import com.gvt.dgt.rabbit.DgtEBoardLib;
+import com.gvt.dgt.rabbit.DgtEBoardLib.CallbackFunctionCharPtr;
 
 public interface DgtEBoard {
 
@@ -42,5 +43,9 @@ public interface DgtEBoard {
 	DgtEBoardLib.CallbackFunctionIntIntCharPtr getMagic();
 
 	DgtEBoardLib.CallbackFunctionInt getType();
+
+	DgtEBoardLib.CallbackFunctionCharPtr getBlackMoveInput();
+
+	DgtEBoardLib.CallbackFunctionCharPtr getWhiteMoveInput();
 
 }

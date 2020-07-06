@@ -98,7 +98,7 @@ class Threshold {
 		frame.setVisible(true);
 //		update();
 
-		int timerDelay = 3000;
+		int timerDelay = 300;
 		new Timer(timerDelay, new ActionListener() {
 
 			@Override
@@ -240,10 +240,11 @@ class Threshold {
 			squareWidth = squareWidth - (squareWidth * 0.01);
 			squareHeight = squareHeight - (squareHeight * 0.01);
 
+			int minSize = (int) (squareWidth * 0.2);
+
 			Imgproc.threshold(srcGray, srcGray, minCanny, maxCanny, Imgproc.THRESH_BINARY_INV); // 125-255
 			Imgproc.findContours(srcGray, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
-			int minSize = (int) (squareWidth * 0.2);
 			logger.trace("Contours size:{}", contours.size());
 			piecesInSquares = new Rect[8][8];
 			for (int i = 0; i < contours.size(); i++) {
