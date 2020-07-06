@@ -334,20 +334,20 @@ class Threshold {
 
 					// Check first black pieces
 					logger.trace("Checkig first all black pieces");
-					for (int piece = 0; piece < 6; ++piece) {
-						if (piece == 0 && qtyBlackPawns == 8) {
+					for (int pieceType = 0; pieceType < 6; ++pieceType) {
+						if (pieceType == 0 && qtyBlackPawns == 8) {
 							logger.trace("All black pawns found, following with the next piece");
 
 							continue;
 						}
 
-						if (piece == 5 && qtyBlackKings == 1) {
+						if (pieceType == 5 && qtyBlackKings == 1) {
 							logger.trace("All black kings found, following with the next piece");
 
 							continue;
 						}
 
-						boolean isPiece = isPiece(x, y, piece, blackPieces);
+						boolean isPiece = isPiece(x, y, pieceType, blackPieces);
 
 						if (isPiece) {
 							if (emptySquares > 0) {
@@ -357,7 +357,7 @@ class Threshold {
 								emptySquares = 0;
 							}
 
-							switch (piece) {
+							switch (pieceType) {
 							case 0:
 								qtyBlackPawns++;
 								fen.append("p");
@@ -397,20 +397,20 @@ class Threshold {
 					// Now check for white pieces
 					if (!pieceFound) {
 						logger.trace("Checkig then all white pieces");
-						for (int piece = 0; piece < 6; ++piece) {
-							if (piece == 0 && qtyWhitePawns == 8) {
+						for (int pieceType = 0; pieceType < 6; ++pieceType) {
+							if (pieceType == 0 && qtyWhitePawns == 8) {
 								logger.trace("All white pawns found, following with the next piece");
 
 								continue;
 							}
 
-							if (piece == 5 && qtyWhiteKings == 1) {
+							if (pieceType == 5 && qtyWhiteKings == 1) {
 								logger.trace("All white kings found, following with the next piece");
 
 								continue;
 							}
 
-							boolean isPiece = isPiece(x, y, piece, whitePieces);
+							boolean isPiece = isPiece(x, y, pieceType, whitePieces);
 
 							if (isPiece) {
 								if (emptySquares > 0) {
@@ -420,7 +420,7 @@ class Threshold {
 									emptySquares = 0;
 								}
 
-								switch (piece) {
+								switch (pieceType) {
 								case 0:
 									qtyWhitePawns++;
 									fen.append("P");
