@@ -6,6 +6,8 @@ import java.awt.GridLayout;
 import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.Robot;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -19,10 +21,13 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
+import javax.swing.Timer;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.opencv.calib3d.Calib3d;
+import org.opencv.core.Core;
+import org.opencv.core.Core.MinMaxLocResult;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfPoint;
@@ -91,18 +96,18 @@ class Threshold {
 		// Display the window.
 		frame.pack();
 		frame.setVisible(true);
-		update();
+//		update();
 
-//		int timerDelay = 100;
-//		new Timer(timerDelay, new ActionListener() {
-//
-//			private int counter = 0;
-//
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//				update();
-//			}
-//		}).start();
+		int timerDelay = 2000;
+		new Timer(timerDelay, new ActionListener() {
+
+			private int counter = 0;
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				update();
+			}
+		}).start();
 	}
 
 	private void addComponentsToPane(Container pane, Image img) {
@@ -235,7 +240,7 @@ class Threshold {
 			Imgproc.cvtColor(copy, srcGray, Imgproc.COLOR_BGR2GRAY);
 
 			extractChessboardCoordinates();
-			showChessboardCoordinates(copy);
+//			showChessboardCoordinates(copy);
 
 			double squareWidth = centerBoxPoints[1][0].x - centerBoxPoints[0][0].x;
 			double squareHeight = centerBoxPoints[0][1].y - centerBoxPoints[0][0].y;
@@ -273,13 +278,12 @@ class Threshold {
 
 			if (checkForInitialPosition()) {
 				// restart a game, scan for pieces to compare later
-
 				recognizePiecesColor();
 
 				cropImagesToCompare();
-
-				createFEN();
 			}
+
+			createFEN();
 
 			/// Apply corner detection
 //		Imgproc.goodFeaturesToTrack(srcGray, corners, maxCorners, qualityLevel, minDistance, new Mat(), blockSize,
@@ -304,13 +308,229 @@ class Threshold {
 	}
 
 	private void createFEN() {
+		logger.trace("Starting FEN diagram creation");
+
+		printPiecesInSquaresDiagram();
+
+		StringBuffer fen = new StringBuffer();
+
+		int qtyBlackPawns = 0;
+		int qtyWhitePawns = 0;
+		int qtyBlackKings = 0;
+		int qtyWhiteKings = 0;
+
 		for (int y = 0; y < 8; ++y) {
+			int emptySquares = 0;
+
+			if (y > 0) {
+				fen.append("/");
+			}
+
 			for (int x = 0; x < 8; ++x) {
 				if (piecesInSquares[x][y] != null) {
-//					Imgproc.matchTemplate
+					// 0=Pawn, 1=Rook, 2=Knight, 3=Bishop, 4=Queen, 5=King
+
+					boolean pieceFound = false;
+
+					// Check first black pieces
+					logger.trace("Checkig first all black pieces");
+					for (int piece = 0; piece < 6; ++piece) {
+						if (piece == 0 && qtyBlackPawns == 8) {
+							logger.trace("All black pawns found, following with the next piece");
+
+							continue;
+						}
+
+						if (piece == 5 && qtyBlackKings == 1) {
+							logger.trace("All black kings found, following with the next piece");
+
+							continue;
+						}
+
+						boolean isPiece = isPiece(x, y, piece, blackPieces);
+
+						if (isPiece) {
+							if (emptySquares > 0) {
+								// write first empty squares
+								fen.append(emptySquares);
+
+								emptySquares = 0;
+							}
+
+							switch (piece) {
+							case 0:
+								qtyBlackPawns++;
+								fen.append("p");
+
+								break;
+							case 1:
+								fen.append("r");
+
+								break;
+							case 2:
+								fen.append("n");
+
+								break;
+							case 3:
+								fen.append("b");
+
+								break;
+							case 4:
+								fen.append("q");
+
+								break;
+							case 5:
+								qtyBlackKings++;
+								fen.append("k");
+
+								break;
+							default:
+								break;
+							}
+
+							pieceFound = true;
+
+							break;
+						}
+					}
+
+					// Now check for white pieces
+					if (!pieceFound) {
+						logger.trace("Checkig then all white pieces");
+						for (int piece = 0; piece < 6; ++piece) {
+							if (piece == 0 && qtyWhitePawns == 8) {
+								logger.trace("All white pawns found, following with the next piece");
+
+								continue;
+							}
+
+							if (piece == 5 && qtyWhiteKings == 1) {
+								logger.trace("All white kings found, following with the next piece");
+
+								continue;
+							}
+
+							boolean isPiece = isPiece(x, y, piece, whitePieces);
+
+							if (isPiece) {
+								if (emptySquares > 0) {
+									// write first empty squares
+									fen.append(emptySquares);
+
+									emptySquares = 0;
+								}
+
+								switch (piece) {
+								case 0:
+									qtyWhitePawns++;
+									fen.append("P");
+
+									break;
+								case 1:
+									fen.append("R");
+
+									break;
+								case 2:
+									fen.append("N");
+
+									break;
+								case 3:
+									fen.append("B");
+
+									break;
+								case 4:
+									fen.append("Q");
+
+									break;
+								case 5:
+									qtyWhiteKings++;
+									fen.append("K");
+
+									break;
+								default:
+									break;
+								}
+
+								break;
+							}
+						}
+					}
+				} else {
+					emptySquares++;
+
+					if (x == 7 && emptySquares == 8) {
+						fen.append("8");
+					} else if (x == 7 && emptySquares > 0) {
+						fen.append(emptySquares);
+					}
 				}
 			}
 		}
+
+		logger.debug("FEN diagram:{}", fen.toString());
+	}
+
+	private void printPiecesInSquaresDiagram() {
+		StringBuffer line = new StringBuffer();
+
+		for (int y = 0; y < 8; ++y) {
+			line = new StringBuffer();
+			for (int x = 0; x < 8; ++x) {
+				if (piecesInSquares[x][y] != null) {
+					line.append("1");
+				} else {
+					line.append("0");
+				}
+			}
+			logger.trace("{}", line.toString());
+		}
+	}
+
+	public boolean isPiece(int x, int y, int pieceType, Mat[] piecesToCompare) {
+		boolean retValue = false;
+
+		Mat pieceRecognized = new Mat();
+		Imgproc.matchTemplate(srcGray.submat(squaresRectangles[x][y]), piecesToCompare[pieceType], pieceRecognized,
+				Imgproc.TM_CCOEFF_NORMED);
+
+		MinMaxLocResult mmr = Core.minMaxLoc(pieceRecognized);
+
+		logger.trace("Checking for piece type:{} in [{}][{}] %:{}", pieceType, x, y, mmr.maxVal);
+
+		if (mmr.maxVal > 0.8) {
+			switch (pieceType) {
+			case 0:
+				logger.trace("Comparing Pawn against [{}][{}] with %{}", x, y, mmr.maxVal);
+
+				break;
+			case 1:
+				logger.trace("Comparing Rook against [{}][{}] with %{}", x, y, mmr.maxVal);
+
+				break;
+			case 2:
+				logger.trace("Comparing Knight against [{}][{}] with %{}", x, y, mmr.maxVal);
+
+				break;
+			case 3:
+				logger.trace("Comparing Bishop against [{}][{}] with %{}", x, y, mmr.maxVal);
+
+				break;
+			case 4:
+				logger.trace("Comparing Queen against [{}][{}] with %{}", x, y, mmr.maxVal);
+
+				break;
+			case 5:
+				logger.trace("Comparing King against [{}][{}] with %{}", x, y, mmr.maxVal);
+
+				break;
+			default:
+				break;
+			}
+
+			retValue = true;
+		}
+
+		return retValue;
 	}
 
 	private void cropImagesToCompare() {
@@ -335,19 +555,19 @@ class Threshold {
 			whitePieces[1] = srcGray.submat(piecesInSquares[0][0]);
 			whitePieces[2] = srcGray.submat(piecesInSquares[1][0]);
 			whitePieces[3] = srcGray.submat(piecesInSquares[2][0]);
-			whitePieces[5] = srcGray.submat(piecesInSquares[3][0]);
+			whitePieces[5] = srcGray.submat(piecesInSquares[3][0]);// Be aware, here the king appears first
 			whitePieces[4] = srcGray.submat(piecesInSquares[4][0]);
 
 			blackPieces[0] = srcGray.submat(piecesInSquares[0][6]);
 			blackPieces[1] = srcGray.submat(piecesInSquares[0][7]);
 			blackPieces[2] = srcGray.submat(piecesInSquares[1][7]);
 			blackPieces[3] = srcGray.submat(piecesInSquares[2][7]);
-			blackPieces[5] = srcGray.submat(piecesInSquares[3][7]);
+			blackPieces[5] = srcGray.submat(piecesInSquares[3][7]); // Be aware, here the king appears first
 			blackPieces[4] = srcGray.submat(piecesInSquares[4][7]);
 		}
 	}
 
-	private void recognizePiecesColor() {
+	private void recognizePiecesColor() { // Check only pawn color
 		Mat piece = srcGray.submat(piecesInSquares[0][1]);
 		int qtyColorPixelsTop = 0;
 		for (int a = 0; a < piece.rows(); a++) {
@@ -399,6 +619,8 @@ class Threshold {
 		if (qtyPieces < 32) {
 			retValue = false;
 		}
+
+		logger.trace("Is initial position? {}", retValue);
 
 		return retValue;
 	}
