@@ -27,6 +27,7 @@ import org.opencv.imgproc.Imgproc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.gvt.dgt.chessboard.Chessboard;
 import com.gvt.windows.MainWindows;
 import com.jamonapi.Monitor;
 import com.jamonapi.MonitorFactory;
@@ -55,8 +56,12 @@ public class ChessboardRecognition extends Thread {
 	private Mat[] whitePieces = new Mat[6];
 	private Mat[] blackPieces = new Mat[6];
 
-	public String previousFEN;
 	public String currentFEN;
+	public String previousFEN;
+	public String toCompareFEN;
+
+	public Chessboard currentChessboard;
+	public Chessboard previousChessboard;
 
 	private long lastCallTime;
 	private long currentCallTime;
@@ -143,6 +148,8 @@ public class ChessboardRecognition extends Thread {
 		int qtyBlackKings = 0;
 		int qtyWhiteKings = 0;
 
+		currentChessboard = new Chessboard(whitePiecesBottom);
+
 		for (int y = 0; y < 8; ++y) {
 			int emptySquares = 0;
 
@@ -184,28 +191,36 @@ public class ChessboardRecognition extends Thread {
 							switch (pieceType) {
 							case 0:
 								qtyBlackPawns++;
+
 								fen.append("p");
+								currentChessboard.setPiece("p", x, y);
 
 								break;
 							case 1:
 								fen.append("r");
+								currentChessboard.setPiece("r", x, y);
 
 								break;
 							case 2:
 								fen.append("n");
+								currentChessboard.setPiece("n", x, y);
 
 								break;
 							case 3:
 								fen.append("b");
+								currentChessboard.setPiece("b", x, y);
 
 								break;
 							case 4:
 								fen.append("q");
+								currentChessboard.setPiece("q", x, y);
 
 								break;
 							case 5:
 								qtyBlackKings++;
+
 								fen.append("k");
+								currentChessboard.setPiece("k", x, y);
 
 								break;
 							default:
@@ -247,28 +262,36 @@ public class ChessboardRecognition extends Thread {
 								switch (pieceType) {
 								case 0:
 									qtyWhitePawns++;
+
 									fen.append("P");
+									currentChessboard.setPiece("P", x, y);
 
 									break;
 								case 1:
 									fen.append("R");
+									currentChessboard.setPiece("R", x, y);
 
 									break;
 								case 2:
 									fen.append("N");
+									currentChessboard.setPiece("N", x, y);
 
 									break;
 								case 3:
 									fen.append("B");
+									currentChessboard.setPiece("B", x, y);
 
 									break;
 								case 4:
 									fen.append("Q");
+									currentChessboard.setPiece("Q", x, y);
 
 									break;
 								case 5:
 									qtyWhiteKings++;
+
 									fen.append("K");
+									currentChessboard.setPiece("K", x, y);
 
 									break;
 								default:
@@ -293,15 +316,21 @@ public class ChessboardRecognition extends Thread {
 
 		if (previousFEN == null) {
 			previousFEN = fen.toString();
-			currentFEN = fen.toString();
+			currentFEN = previousFEN;
+			toCompareFEN = currentFEN;
+
+			previousChessboard = currentChessboard;
+
 			lastCallTime = System.currentTimeMillis();
 			currentCallTime = lastCallTime;
 
 			logger.info("FEN diagram:{}", fen);
+			currentChessboard.print();
 
 //			logger.debug("Its possible move? {}", MainWindows.dgtEBoard.getDll()._DGTDLL_WritePosition(currentFEN));
 		} else {
 			previousFEN = currentFEN;
+			previousChessboard = currentChessboard;
 			lastCallTime = currentCallTime;
 		}
 
@@ -311,12 +340,18 @@ public class ChessboardRecognition extends Thread {
 
 			long timeDifference = currentCallTime - lastCallTime;
 
-			if (timeDifference < 200) {
+//			if (timeDifference < 100) {
+			logger.debug("Difference between calls:{} {} resultado:{}", lastCallTime, currentCallTime, currentCallTime - lastCallTime);
+			logger.info("FEN diagram:{}", fen);
+//				logger.debug("move piece:{}", MainWindows.dgtEBoard.getDll()._DGTDLL_PlayWhiteMove("d4"));
 
-				logger.debug("Difference between calls:{} {} resultado:{}", lastCallTime, currentCallTime, currentCallTime - lastCallTime);
-				logger.info("FEN diagram:{}", fen);
-				logger.debug("move piece:{}", MainWindows.dgtEBoard.getDll()._DGTDLL_PlayWhiteMove("d4"));
-			}
+			currentChessboard.print();
+			String play = currentChessboard.compare(previousChessboard);
+
+			logger.info("Play:{}", play);
+
+			toCompareFEN = currentFEN;
+//			}
 //			MainWindows.dgtEBoard.getDll()._DGTDLL_DisplayClockMessage("Pd4", 3000);
 
 //			logger.debug("Its possible move? {}", MainWindows.dgtEBoard.getDll()._DGTDLL_WritePosition(currentFEN));
