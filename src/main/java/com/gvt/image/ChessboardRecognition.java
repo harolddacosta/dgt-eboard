@@ -58,6 +58,9 @@ public class ChessboardRecognition extends Thread {
 	public String previousFEN;
 	public String currentFEN;
 
+	private long lastCallTime;
+	private long currentCallTime;
+
 	AtomicBoolean executingUpdate = new AtomicBoolean(false);
 
 	@Override
@@ -291,23 +294,32 @@ public class ChessboardRecognition extends Thread {
 		if (previousFEN == null) {
 			previousFEN = fen.toString();
 			currentFEN = fen.toString();
+			lastCallTime = System.currentTimeMillis();
+			currentCallTime = lastCallTime;
 
 			logger.info("FEN diagram:{}", fen);
 
-			logger.debug("Its possible move? {}", MainWindows.dgtEBoard.getDll()._DGTDLL_WritePosition(currentFEN));
+//			logger.debug("Its possible move? {}", MainWindows.dgtEBoard.getDll()._DGTDLL_WritePosition(currentFEN));
 		} else {
 			previousFEN = currentFEN;
+			lastCallTime = currentCallTime;
 		}
 
 		if (!StringUtils.equals(previousFEN, fen.toString())) {
 			currentFEN = fen.toString();
+			currentCallTime = System.currentTimeMillis();
 
-			logger.info("FEN diagram:{}", fen);
+			long timeDifference = currentCallTime - lastCallTime;
 
-			logger.debug("move piece:{}", MainWindows.dgtEBoard.getDll()._DGTDLL_PlayWhiteMove("d4"));
-			MainWindows.dgtEBoard.getDll()._DGTDLL_DisplayClockMessage("Pd4", 3000);
+			if (timeDifference < 200) {
 
-			logger.debug("Its possible move? {}", MainWindows.dgtEBoard.getDll()._DGTDLL_WritePosition(currentFEN));
+				logger.debug("Difference between calls:{} {} resultado:{}", lastCallTime, currentCallTime, currentCallTime - lastCallTime);
+				logger.info("FEN diagram:{}", fen);
+				logger.debug("move piece:{}", MainWindows.dgtEBoard.getDll()._DGTDLL_PlayWhiteMove("d4"));
+			}
+//			MainWindows.dgtEBoard.getDll()._DGTDLL_DisplayClockMessage("Pd4", 3000);
+
+//			logger.debug("Its possible move? {}", MainWindows.dgtEBoard.getDll()._DGTDLL_WritePosition(currentFEN));
 		}
 	}
 
