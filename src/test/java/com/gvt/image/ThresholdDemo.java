@@ -13,6 +13,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.imageio.ImageIO;
 import javax.swing.BoxLayout;
@@ -57,7 +58,6 @@ class Threshold {
 	public JFrame frame;
 	private JLabel imgLabel;
 	private static final int MAX_THRESHOLD = 500;
-//	private int maxCorners = 23;
 	private int minCanny = 125;
 	private int maxCanny = 255;
 	private int squares = 6;
@@ -73,6 +73,8 @@ class Threshold {
 	private Mat[] whitePieces = new Mat[6];
 	private Mat[] blackPieces = new Mat[6];
 
+	AtomicBoolean executingUpdate = new AtomicBoolean(false);
+
 	public Threshold(String[] args) {
 		/// Load source image and convert it to gray
 		String filename = args.length > 0 ? args[0] : getClass().getClassLoader().getResource("onlyChessboard.bmp").getFile();
@@ -82,8 +84,6 @@ class Threshold {
 			System.err.println("Cannot read image: " + filename);
 			System.exit(0);
 		}
-
-//		Imgproc.cvtColor(src, srcGray, Imgproc.COLOR_BGR2GRAY);
 
 		// Create and set up the window.
 		frame = new JFrame("Shi-Tomasi corner detector demo");
@@ -98,14 +98,14 @@ class Threshold {
 		frame.setVisible(true);
 //		update();
 
-		int timerDelay = 2000;
+		int timerDelay = 3000;
 		new Timer(timerDelay, new ActionListener() {
-
-			private int counter = 0;
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				update();
+				if (executingUpdate.get() == false) {
+					update();
+				}
 			}
 		}).start();
 	}
@@ -215,18 +215,11 @@ class Threshold {
 	}
 
 	public void update() {
-		/// Parameters for Shi-Tomasi algorithm
-//		maxCorners = Math.max(maxCorners, 1);
-		List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
-//		MatOfPoint2f corners = new MatOfPoint2f();
-		Mat hierarchy = new Mat();
-//		double qualityLevel = 0.01;
-//		double minDistance = 10;
-//		int blockSize = 3, gradientSize = 3;
-//		boolean useHarrisDetector = false;
-//		double k = 0.04;
+		executingUpdate.set(true);
 
+		List<MatOfPoint> contours = new ArrayList<MatOfPoint>();
 		Robot robot;
+
 		try {
 			robot = new Robot();
 
@@ -235,7 +228,6 @@ class Threshold {
 
 			/// Copy the source image
 			copy = src.clone();
-//		Mat dest = Mat.zeros(copy.size(), CvType.CV_8UC3);
 			srcGray = new Mat();
 			Imgproc.cvtColor(copy, srcGray, Imgproc.COLOR_BGR2GRAY);
 
@@ -245,35 +237,22 @@ class Threshold {
 			double squareWidth = centerBoxPoints[1][0].x - centerBoxPoints[0][0].x;
 			double squareHeight = centerBoxPoints[0][1].y - centerBoxPoints[0][0].y;
 
-//			logger.debug("Square width:{}", squareWidth);
-//			logger.debug("Square height:{}", squareHeight);
-
 			squareWidth = squareWidth - (squareWidth * 0.01);
 			squareHeight = squareHeight - (squareHeight * 0.01);
 
-//			Imgproc.Canny(srcGray, srcGray, minCanny, maxCanny); // 5, 75
 			Imgproc.threshold(srcGray, srcGray, minCanny, maxCanny, Imgproc.THRESH_BINARY_INV); // 125-255
-			Imgproc.findContours(srcGray, contours, hierarchy, Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-			// Draw contours in dest Mat
-//		Imgproc.drawContours(dest, contours, -1, new Scalar(255, 0, 0));
-//		Imgproc.cornerEigenValsAndVecs(cannyApplied, cannyApplied, blockSize, 1);
-
-//		Mat finalDraw = new Mat(cannyApplied.size(), CvType.CV_8U, Scalar.all(255));
-//
+			Imgproc.findContours(srcGray, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
 
 			int minSize = (int) (squareWidth * 0.2);
-//			int minSize = 0;
 			logger.trace("Contours size:{}", contours.size());
 			piecesInSquares = new Rect[8][8];
 			for (int i = 0; i < contours.size(); i++) {
-//			if (Imgproc.contourArea(contours.get(i)) > 10) {
 				Rect rect = Imgproc.boundingRect(contours.get(i));
 				if ((rect.height > minSize && rect.height < squareHeight) && (rect.width > minSize && rect.width < squareWidth)) {
-					Imgproc.rectangle(copy, rect, new Scalar(255, 255, 0));
+//					Imgproc.rectangle(copy, rect, new Scalar(255, 255, 0));
 
 					putPieceInsideSquare(rect);
 				}
-//			}
 			}
 
 			if (checkForInitialPosition()) {
@@ -285,26 +264,14 @@ class Threshold {
 
 			createFEN();
 
-			/// Apply corner detection
-//		Imgproc.goodFeaturesToTrack(srcGray, corners, maxCorners, qualityLevel, minDistance, new Mat(), blockSize,
-//				gradientSize, useHarrisDetector, k);
-
-			/// Draw corners detected
-//		System.out.println("** Number of corners detected: " + corners.rows());
-//		int[] cornersData = new int[(int) (corners.total() * corners.channels())];
-//		corners.get(0, 0, cornersData);
-//		int radius = 4;
-//		for (int i = 0; i < corners.rows(); i++) {
-//			Imgproc.circle(srcGray, new Point(cornersData[i * 2], cornersData[i * 2 + 1]), radius,
-//					new Scalar(rng.nextInt(256), rng.nextInt(256), rng.nextInt(256)), Imgproc.FILLED);
-//		}
-
 			imgLabel.setIcon(new ImageIcon(HighGui.toBufferedImage(srcGray)));
 			frame.repaint();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
+		executingUpdate.set(false);
 	}
 
 	private void createFEN() {
@@ -497,14 +464,23 @@ class Threshold {
 
 		logger.trace("Checking for piece type:{} in [{}][{}] %:{}", pieceType, x, y, mmr.maxVal);
 
-		if (mmr.maxVal > 0.8) {
+		if (mmr.maxVal > 0.7) {
+			switch (pieceType) {
+			case 1:
+				logger.trace("Comparing Rook against [{}][{}] with %{}", x, y, mmr.maxVal);
+
+				retValue = true;
+
+				break;
+			default:
+				break;
+			}
+		}
+
+		if (mmr.maxVal > 0.75) {
 			switch (pieceType) {
 			case 0:
 				logger.trace("Comparing Pawn against [{}][{}] with %{}", x, y, mmr.maxVal);
-
-				break;
-			case 1:
-				logger.trace("Comparing Rook against [{}][{}] with %{}", x, y, mmr.maxVal);
 
 				break;
 			case 2:
@@ -591,6 +567,8 @@ class Threshold {
 
 		if (qtyColorPixelsTop > qtyColorPixelsBottom) {
 			whitePiecesBottom = true;
+		} else {
+			whitePiecesBottom = false;
 		}
 
 		logger.trace("White pieces bottom? {}", whitePiecesBottom);
@@ -636,8 +614,6 @@ class Threshold {
 							potencialPieceShape.br().x, potencialPieceShape.br().y);
 					logger.trace("squaresRectangles rect:{},{},{},{}", squaresRectangles[x][y].tl().x, squaresRectangles[x][y].tl().y,
 							squaresRectangles[x][y].br().x, squaresRectangles[x][y].br().y);
-//					logger.trace("potencialPieceShape.br().y:{}", potencialPieceShape.br().y);
-//					logger.trace("squaresRectangles[x][y].br().y:{}", squaresRectangles[x][y].br().y);
 
 					if (piecesInSquares[x][y] != null) { // already contains a piece, check for larger
 						if (piecesInSquares[x][y].area() < potencialPieceShape.area()) {
@@ -690,14 +666,12 @@ class Threshold {
 			if (corners.rows() > 0 && corners.cols() > 0) {
 				squaresFound = true;
 
-				Calib3d.drawChessboardCorners(copy, squaresSize, corners, isChessboard);
+//				Calib3d.drawChessboardCorners(copy, squaresSize, corners, isChessboard);
 			}
 		}
 
 		double squareWidth = corners.get(1, 0)[0] - corners.get(0, 0)[0];
 		double squareHeight = corners.get(squareCorners, 0)[1] - corners.get(0, 0)[1];
-//		double squareWidth = 96;
-//		double squareHeight = 96;
 		logger.trace("First coordinate:{}-{}", corners.get(0, 0)[0], corners.get(1, 0)[0]);
 		logger.trace("Second coordinate:{}-{}", corners.get(0, 0)[1], corners.get(squareCorners, 0)[1]);
 		logger.trace("Square width:{} Square height:{}", squareWidth, squareHeight);
@@ -756,7 +730,6 @@ class Threshold {
 		logger.info("Chessboard information extraction:{}", mon);
 
 		chessboardInfoExtracted = true;
-//		return centerBoxPoints;
 	}
 
 	private void showChessboardCoordinates(Mat copy) {
