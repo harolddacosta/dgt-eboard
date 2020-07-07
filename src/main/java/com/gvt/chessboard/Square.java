@@ -1,4 +1,4 @@
-package com.gvt.dgt.chessboard;
+package com.gvt.chessboard;
 
 public class Square {
 
@@ -20,6 +20,10 @@ public class Square {
 
 	public Piece getPiece() {
 		return piece;
+	}
+
+	public String getAlgebraicCoordinate() {
+		return algebraicCoordinate;
 	}
 
 	@Override

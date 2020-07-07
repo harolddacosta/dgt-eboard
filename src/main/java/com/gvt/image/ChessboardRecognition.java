@@ -27,7 +27,7 @@ import org.opencv.imgproc.Imgproc;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.gvt.dgt.chessboard.Chessboard;
+import com.gvt.chessboard.Chessboard;
 import com.gvt.windows.MainWindows;
 import com.jamonapi.Monitor;
 import com.jamonapi.MonitorFactory;
@@ -330,7 +330,7 @@ public class ChessboardRecognition extends Thread {
 //			logger.debug("Its possible move? {}", MainWindows.dgtEBoard.getDll()._DGTDLL_WritePosition(currentFEN));
 		} else {
 			previousFEN = currentFEN;
-			previousChessboard = currentChessboard;
+
 			lastCallTime = currentCallTime;
 		}
 
@@ -350,6 +350,7 @@ public class ChessboardRecognition extends Thread {
 
 			logger.info("Play:{}", play);
 
+			previousChessboard = currentChessboard;
 			toCompareFEN = currentFEN;
 //			}
 //			MainWindows.dgtEBoard.getDll()._DGTDLL_DisplayClockMessage("Pd4", 3000);

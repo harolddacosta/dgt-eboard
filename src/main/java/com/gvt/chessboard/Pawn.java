@@ -1,4 +1,4 @@
-package com.gvt.dgt.chessboard;
+package com.gvt.chessboard;
 
 public class Pawn implements Piece {
 
