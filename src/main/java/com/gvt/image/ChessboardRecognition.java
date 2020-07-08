@@ -340,7 +340,6 @@ public class ChessboardRecognition extends Thread {
 
 			currentChessboard.print(false);
 			String play = currentChessboard.compare(previousChessboard);
-
 			logger.info("Play:{}", play);
 
 			previousChessboard = currentChessboard;

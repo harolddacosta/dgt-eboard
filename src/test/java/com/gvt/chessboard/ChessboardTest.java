@@ -564,4 +564,188 @@ public class ChessboardTest {
 		assertEquals("Pawn movement from starting point", "Kxd5", currentPosition.compare(previousPosition));
 	}
 
+	@Test
+	public void movement_king_piece_castle_kingside_white_down() {
+		logger.trace("**************** Movements test ****************");
+
+		Chessboard previousPosition = new Chessboard(true);
+		previousPosition.setPiece("K", 4, 7);
+		previousPosition.setPiece("R", 7, 7);
+		logger.trace("**************** Previous chesboard ****************");
+		previousPosition.print(false);
+		assertEquals("coordinate test with piece", 'K', previousPosition.getSquare("e1").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'R', previousPosition.getSquare("h1").getPiece().getFenLetter());
+
+		Chessboard currentPosition = new Chessboard(true);
+		currentPosition.setPiece("K", 6, 7);
+		currentPosition.setPiece("R", 5, 7);
+		logger.trace("**************** current chesboard ****************");
+		currentPosition.print(false);
+		assertEquals("coordinate test with piece", 'R', currentPosition.getSquare("f1").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'K', currentPosition.getSquare("g1").getPiece().getFenLetter());
+
+		assertEquals("Pawn movement from starting point", "O-O", currentPosition.compare(previousPosition));
+	}
+
+	@Test
+	public void movement_king_piece_castle_queenside_white_down() {
+		logger.trace("**************** Movements test ****************");
+
+		Chessboard previousPosition = new Chessboard(true);
+		previousPosition.setPiece("K", 4, 7);
+		previousPosition.setPiece("R", 0, 7);
+		logger.trace("**************** Previous chesboard ****************");
+		previousPosition.print(false);
+		assertEquals("coordinate test with piece", 'K', previousPosition.getSquare("e1").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'R', previousPosition.getSquare("a1").getPiece().getFenLetter());
+
+		Chessboard currentPosition = new Chessboard(true);
+		currentPosition.setPiece("K", 2, 7);
+		currentPosition.setPiece("R", 3, 7);
+		logger.trace("**************** current chesboard ****************");
+		currentPosition.print(false);
+		assertEquals("coordinate test with piece", 'R', currentPosition.getSquare("d1").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'K', currentPosition.getSquare("c1").getPiece().getFenLetter());
+
+		assertEquals("Pawn movement from starting point", "O-O-O", currentPosition.compare(previousPosition));
+	}
+
+	@Test
+	public void movement_king_piece_castle_kingside_black_down() {
+		logger.trace("**************** Movements test ****************");
+
+		Chessboard previousPosition = new Chessboard(false);
+		previousPosition.setPiece("k", 3, 7);
+		previousPosition.setPiece("r", 0, 7);
+		logger.trace("**************** Previous chesboard ****************");
+		previousPosition.print(false);
+		assertEquals("coordinate test with piece", 'k', previousPosition.getSquare("e8").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'r', previousPosition.getSquare("h8").getPiece().getFenLetter());
+
+		Chessboard currentPosition = new Chessboard(false);
+		currentPosition.setPiece("k", 1, 7);
+		currentPosition.setPiece("r", 2, 7);
+		logger.trace("**************** current chesboard ****************");
+		currentPosition.print(false);
+		assertEquals("coordinate test with piece", 'r', currentPosition.getSquare("f8").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'k', currentPosition.getSquare("g8").getPiece().getFenLetter());
+
+		assertEquals("Pawn movement from starting point", "O-O", currentPosition.compare(previousPosition));
+	}
+
+	@Test
+	public void movement_king_piece_castle_queenside_black_down() {
+		logger.trace("**************** Movements test ****************");
+
+		Chessboard previousPosition = new Chessboard(false);
+		previousPosition.setPiece("k", 3, 7);
+		previousPosition.setPiece("r", 7, 7);
+		logger.trace("**************** Previous chesboard ****************");
+		previousPosition.print(false);
+		assertEquals("coordinate test with piece", 'k', previousPosition.getSquare("e8").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'r', previousPosition.getSquare("a8").getPiece().getFenLetter());
+
+		Chessboard currentPosition = new Chessboard(false);
+		currentPosition.setPiece("k", 5, 7);
+		currentPosition.setPiece("r", 4, 7);
+		logger.trace("**************** current chesboard ****************");
+		currentPosition.print(false);
+		assertEquals("coordinate test with piece", 'r', currentPosition.getSquare("d8").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'k', currentPosition.getSquare("c8").getPiece().getFenLetter());
+
+		assertEquals("Pawn movement from starting point", "O-O-O", currentPosition.compare(previousPosition));
+	}
+
+	@Test
+	public void movement_king_piece_black_castle_kingside_white_down() {
+		logger.trace("**************** Movements test ****************");
+
+		Chessboard previousPosition = new Chessboard(true);
+		previousPosition.setPiece("k", 4, 0);
+		previousPosition.setPiece("r", 7, 0);
+		logger.trace("**************** Previous chesboard ****************");
+		previousPosition.print(false);
+		assertEquals("coordinate test with piece", 'k', previousPosition.getSquare("e8").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'r', previousPosition.getSquare("h8").getPiece().getFenLetter());
+
+		Chessboard currentPosition = new Chessboard(true);
+		currentPosition.setPiece("k", 6, 0);
+		currentPosition.setPiece("r", 5, 0);
+		logger.trace("**************** current chesboard ****************");
+		currentPosition.print(false);
+		assertEquals("coordinate test with piece", 'r', currentPosition.getSquare("f8").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'k', currentPosition.getSquare("g8").getPiece().getFenLetter());
+
+		assertEquals("Pawn movement from starting point", "O-O", currentPosition.compare(previousPosition));
+	}
+
+	@Test
+	public void movement_king_piece_black_castle_queenside_white_down() {
+		logger.trace("**************** Movements test ****************");
+
+		Chessboard previousPosition = new Chessboard(true);
+		previousPosition.setPiece("k", 4, 0);
+		previousPosition.setPiece("r", 0, 0);
+		logger.trace("**************** Previous chesboard ****************");
+		previousPosition.print(false);
+		assertEquals("coordinate test with piece", 'k', previousPosition.getSquare("e8").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'r', previousPosition.getSquare("a8").getPiece().getFenLetter());
+
+		Chessboard currentPosition = new Chessboard(true);
+		currentPosition.setPiece("k", 2, 0);
+		currentPosition.setPiece("r", 3, 0);
+		logger.trace("**************** current chesboard ****************");
+		currentPosition.print(false);
+		assertEquals("coordinate test with piece", 'r', currentPosition.getSquare("d8").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'k', currentPosition.getSquare("c8").getPiece().getFenLetter());
+
+		assertEquals("Pawn movement from starting point", "O-O-O", currentPosition.compare(previousPosition));
+	}
+
+	@Test
+	public void movement_king_piece_white_castle_kingside_white_up() {
+		logger.trace("**************** Movements test ****************");
+
+		Chessboard previousPosition = new Chessboard(false);
+		previousPosition.setPiece("K", 3, 0);
+		previousPosition.setPiece("R", 0, 0);
+		logger.trace("**************** Previous chesboard ****************");
+		previousPosition.print(false);
+		assertEquals("coordinate test with piece", 'K', previousPosition.getSquare("e1").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'R', previousPosition.getSquare("h1").getPiece().getFenLetter());
+
+		Chessboard currentPosition = new Chessboard(false);
+		currentPosition.setPiece("K", 1, 0);
+		currentPosition.setPiece("R", 2, 0);
+		logger.trace("**************** current chesboard ****************");
+		currentPosition.print(false);
+		assertEquals("coordinate test with piece", 'R', currentPosition.getSquare("f1").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'K', currentPosition.getSquare("g1").getPiece().getFenLetter());
+
+		assertEquals("Pawn movement from starting point", "O-O", currentPosition.compare(previousPosition));
+	}
+
+	@Test
+	public void movement_king_piece_white_castle_queenside_white_up() {
+		logger.trace("**************** Movements test ****************");
+
+		Chessboard previousPosition = new Chessboard(false);
+		previousPosition.setPiece("K", 3, 0);
+		previousPosition.setPiece("R", 7, 0);
+		logger.trace("**************** Previous chesboard ****************");
+		previousPosition.print(false);
+		assertEquals("coordinate test with piece", 'K', previousPosition.getSquare("e1").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'R', previousPosition.getSquare("a1").getPiece().getFenLetter());
+
+		Chessboard currentPosition = new Chessboard(false);
+		currentPosition.setPiece("K", 5, 0);
+		currentPosition.setPiece("R", 4, 0);
+		logger.trace("**************** current chesboard ****************");
+		currentPosition.print(false);
+		assertEquals("coordinate test with piece", 'R', currentPosition.getSquare("d1").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'K', currentPosition.getSquare("c1").getPiece().getFenLetter());
+
+		assertEquals("Pawn movement from starting point", "O-O-O", currentPosition.compare(previousPosition));
+	}
+
 }

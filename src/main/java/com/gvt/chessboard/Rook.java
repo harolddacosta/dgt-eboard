@@ -23,6 +23,30 @@ public class Rook implements Piece {
 		String retValue = null;
 		boolean thereWasCapture = false;
 
+		if (finalSquare.getPiece().getFenLetter() == 'K' && finalSquare.getAlgebraicCoordinate().equals("c1")) {
+			logger.info("Move:{}", "O-O-O");
+
+			return "O-O-O";
+		}
+
+		if (finalSquare.getPiece().getFenLetter() == 'K' && finalSquare.getAlgebraicCoordinate().equals("g1")) {
+			logger.info("Move:{}", "O-O");
+
+			return "O-O";
+		}
+
+		if (finalSquare.getPiece().getFenLetter() == 'k' && finalSquare.getAlgebraicCoordinate().equals("g8")) {
+			logger.info("Move:{}", "O-O");
+
+			return "O-O";
+		}
+
+		if (finalSquare.getPiece().getFenLetter() == 'k' && finalSquare.getAlgebraicCoordinate().equals("c8")) {
+			logger.info("Move:{}", "O-O-O");
+
+			return "O-O-O";
+		}
+
 		if (!previousStateInfinalSquare.isEmpty()) {
 			logger.trace("There was a capture");
 
