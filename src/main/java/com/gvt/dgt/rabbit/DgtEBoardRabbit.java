@@ -1,9 +1,12 @@
 package com.gvt.dgt.rabbit;
 
+import java.awt.AWTException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.gvt.dgt.DgtEBoard;
+import com.gvt.windows.Keyboard;
 import com.sun.jna.Native; //NOSONAR
 import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.User32;
@@ -15,11 +18,20 @@ public class DgtEBoardRabbit implements DgtEBoard {
 
 	private boolean running = true;
 	private DgtEBoardLib dll = null;
+	Keyboard keyboard;
 
 	private DgtEBoardLib.CallbackFunctionCharPtr whiteMoveInput = data -> {
 		String str = data.getString(0);
 
 		logger.debug("Received WhiteMoveInput:{}", str);
+
+		try {
+			keyboard = new Keyboard();
+			keyboard.type(str);
+		} catch (AWTException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	};
 
 	@Override
@@ -31,6 +43,14 @@ public class DgtEBoardRabbit implements DgtEBoard {
 		String str = data.getString(0);
 
 		logger.debug("Received BlackMoveInput:{}", str);
+
+//		try {
+//			keyboard = new Keyboard();
+//			keyboard.type(str);
+//		} catch (AWTException e) {
+//			// TODO Auto-generated catch block
+//			e.printStackTrace();
+//		}
 	};
 
 	@Override

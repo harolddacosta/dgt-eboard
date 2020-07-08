@@ -7,10 +7,16 @@ public class Knight implements Piece {
 
 	private static Logger logger = LoggerFactory.getLogger(Knight.class);
 
+	private Color color;
 	private char fenLetter;
 
 	public Knight(Color color) {
+		this.color = color;
 		fenLetter = color == Color.BLACK ? 'n' : 'N';
+	}
+
+	public Color getColor() {
+		return color;
 	}
 
 	public char getFenLetter() {

@@ -50,7 +50,7 @@ public class MainWindows {
 						chessboardRecognition.stop();
 					}
 
-					chessboardRecognition = new ChessboardRecognition();
+					chessboardRecognition = new ChessboardRecognition(dgtEBoard);
 
 					snipIt = new SnipIt();
 				});

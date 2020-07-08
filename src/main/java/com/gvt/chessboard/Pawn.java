@@ -7,10 +7,16 @@ public class Pawn implements Piece {
 
 	private static Logger logger = LoggerFactory.getLogger(Pawn.class);
 
+	private Color color;
 	private char fenLetter;
 
 	public Pawn(Color color) {
+		this.color = color;
 		fenLetter = color == Color.BLACK ? 'p' : 'P';
+	}
+
+	public Color getColor() {
+		return color;
 	}
 
 	@Override
@@ -34,7 +40,7 @@ public class Pawn implements Piece {
 		} else {
 			retValue = startingSquare.getAlgebraicCoordinate().charAt(0) + "x" + finalSquare.getAlgebraicCoordinate();
 		}
-		
+
 		logger.info("Move:{}", retValue);
 
 		return retValue;

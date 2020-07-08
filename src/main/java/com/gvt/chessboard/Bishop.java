@@ -7,10 +7,16 @@ public class Bishop implements Piece {
 
 	private static Logger logger = LoggerFactory.getLogger(Bishop.class);
 
+	private Color color;
 	private char fenLetter;
 
 	public Bishop(Color color) {
+		this.color = color;
 		fenLetter = color == Color.BLACK ? 'b' : 'B';
+	}
+
+	public Color getColor() {
+		return color;
 	}
 
 	public char getFenLetter() {

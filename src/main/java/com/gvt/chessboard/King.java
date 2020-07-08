@@ -3,14 +3,22 @@ package com.gvt.chessboard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.gvt.chessboard.Piece.Color;
+
 public class King implements Piece {
 
 	private static Logger logger = LoggerFactory.getLogger(King.class);
 
+	private Color color;
 	private char fenLetter;
 
 	public King(Color color) {
+		this.color = color;
 		fenLetter = color == Color.BLACK ? 'k' : 'K';
+	}
+
+	public Color getColor() {
+		return color;
 	}
 
 	public char getFenLetter() {

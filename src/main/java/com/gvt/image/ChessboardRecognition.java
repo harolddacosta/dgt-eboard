@@ -1,5 +1,6 @@
 package com.gvt.image;
 
+import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -28,7 +29,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.gvt.chessboard.Chessboard;
-import com.gvt.windows.MainWindows;
+import com.gvt.chessboard.Piece.Color;
+import com.gvt.dgt.DgtEBoard;
 import com.jamonapi.Monitor;
 import com.jamonapi.MonitorFactory;
 
@@ -66,7 +68,13 @@ public class ChessboardRecognition extends Thread {
 	private long lastCallTime;
 	private long currentCallTime;
 
+	private DgtEBoard dgtEBoard;
+
 	AtomicBoolean executingUpdate = new AtomicBoolean(false);
+
+	public ChessboardRecognition(DgtEBoard dgtEBoard) {
+		this.dgtEBoard = dgtEBoard;
+	}
 
 	@Override
 	public void run() {
@@ -88,7 +96,8 @@ public class ChessboardRecognition extends Thread {
 		try {
 			robot = new Robot();
 
-			BufferedImage screenFullImage = robot.createScreenCapture(MainWindows.snipIt.getSelectedBounds());
+//			BufferedImage screenFullImage = robot.createScreenCapture(MainWindows.snipIt.getSelectedBounds());
+			BufferedImage screenFullImage = robot.createScreenCapture(new Rectangle(2481, 152, 768, 768));
 			src = bufferedImage2Mat(screenFullImage);
 
 			/// Copy the source image
@@ -336,11 +345,27 @@ public class ChessboardRecognition extends Thread {
 //			if (timeDifference < 100) {
 			logger.debug("Difference between calls:{} {} resultado:{}", lastCallTime, currentCallTime, currentCallTime - lastCallTime);
 			logger.info("FEN diagram:{}", fen);
-//				logger.debug("move piece:{}", MainWindows.dgtEBoard.getDll()._DGTDLL_PlayWhiteMove("d4"));
+//				logger.debug("move piece:{}", );
 
 			currentChessboard.print(false);
 			String play = currentChessboard.compare(previousChessboard);
 			logger.info("Play:{}", play);
+
+			try {
+				if (currentChessboard.playForColor == Color.BLACK) {
+					dgtEBoard.getDll()._DGTDLL_PlayBlackMove(play);
+					dgtEBoard.getDll()._DGTDLL_DisplayClockMessage(play, 3000);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+
+				if (currentChessboard.playForColor == Color.BLACK) {
+					dgtEBoard.getDll()._DGTDLL_PlayBlackMove(play);
+					dgtEBoard.getDll()._DGTDLL_DisplayClockMessage(play, 3000);
+				}
+//				ChessboardRecognition repair = new ChessboardRecognition();
+//				repair.start();
+			}
 
 			previousChessboard = currentChessboard;
 			toCompareFEN = currentFEN;

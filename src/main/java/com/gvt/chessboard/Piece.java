@@ -6,6 +6,8 @@ public interface Piece {
 		WHITE, BLACK;
 	}
 
+	Color getColor();
+
 	char getFenLetter();
 
 	String getMovement(Square startingSquare, Square previousStateInfinalSquare, Square finalSquare);

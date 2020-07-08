@@ -7,10 +7,16 @@ public class Rook implements Piece {
 
 	private static Logger logger = LoggerFactory.getLogger(Rook.class);
 
+	private Color color;
 	private char fenLetter;
 
 	public Rook(Color color) {
+		this.color = color;
 		fenLetter = color == Color.BLACK ? 'r' : 'R';
+	}
+
+	public Color getColor() {
+		return color;
 	}
 
 	@Override

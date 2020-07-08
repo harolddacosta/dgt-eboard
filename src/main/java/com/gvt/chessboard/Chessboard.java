@@ -16,6 +16,8 @@ public class Chessboard {
 	private boolean whitePiecesBottom = false;
 	private Square[][] squares = new Square[8][8];
 
+	public Color playForColor;
+
 	public Chessboard(boolean whitePiecesBottom) {
 		this.whitePiecesBottom = whitePiecesBottom;
 
@@ -148,6 +150,8 @@ public class Chessboard {
 					}
 
 					if (startingSquare != null && finalSquare != null) {
+						playForColor = startingSquare.getPiece().getColor();
+
 						return examineMovement(startingSquare, previousStateInfinalSquare, finalSquare);
 					}
 				}

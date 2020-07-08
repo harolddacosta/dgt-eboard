@@ -7,10 +7,16 @@ public class Queen implements Piece {
 
 	private static Logger logger = LoggerFactory.getLogger(Queen.class);
 
+	private Color color;
 	private char fenLetter;
 
 	public Queen(Color color) {
+		this.color = color;
 		fenLetter = color == Color.BLACK ? 'q' : 'Q';
+	}
+
+	public Color getColor() {
+		return color;
 	}
 
 	public char getFenLetter() {
