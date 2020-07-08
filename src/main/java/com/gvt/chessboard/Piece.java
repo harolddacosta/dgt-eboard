@@ -7,4 +7,6 @@ public interface Piece {
 	}
 
 	char getFenLetter();
+
+	String getMovement(Square startingSquare, Square previousStateInfinalSquare, Square finalSquare);
 }

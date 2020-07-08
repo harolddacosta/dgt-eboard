@@ -73,9 +73,9 @@ public class ChessboardRecognition extends Thread {
 		super.run();
 
 		while (true) {
-			if (!executingUpdate.get()) {
-				update();
-			}
+//			if (!executingUpdate.get()) {
+			update();
+//			}
 		}
 	}
 
@@ -164,7 +164,7 @@ public class ChessboardRecognition extends Thread {
 					boolean pieceFound = false;
 
 					// Check first black pieces
-					logger.trace("Checkig first all black pieces");
+					logger.trace("Checking first all black pieces");
 					for (int pieceType = 0; pieceType < 6; ++pieceType) {
 						if (pieceType == 0 && qtyBlackPawns == 8) {
 							logger.trace("All black pawns found, following with the next piece");
@@ -228,8 +228,6 @@ public class ChessboardRecognition extends Thread {
 							}
 
 							pieceFound = true;
-
-							break;
 						}
 					}
 
@@ -297,8 +295,6 @@ public class ChessboardRecognition extends Thread {
 								default:
 									break;
 								}
-
-								break;
 							}
 						}
 					}
@@ -325,12 +321,9 @@ public class ChessboardRecognition extends Thread {
 			currentCallTime = lastCallTime;
 
 			logger.info("FEN diagram:{}", fen);
-			currentChessboard.print();
-
-//			logger.debug("Its possible move? {}", MainWindows.dgtEBoard.getDll()._DGTDLL_WritePosition(currentFEN));
+			currentChessboard.print(false);
 		} else {
 			previousFEN = currentFEN;
-
 			lastCallTime = currentCallTime;
 		}
 
@@ -345,7 +338,7 @@ public class ChessboardRecognition extends Thread {
 			logger.info("FEN diagram:{}", fen);
 //				logger.debug("move piece:{}", MainWindows.dgtEBoard.getDll()._DGTDLL_PlayWhiteMove("d4"));
 
-			currentChessboard.print();
+			currentChessboard.print(false);
 			String play = currentChessboard.compare(previousChessboard);
 
 			logger.info("Play:{}", play);

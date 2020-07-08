@@ -70,9 +70,7 @@ public class Chessboard {
 			break;
 		}
 
-		Square square = new Square(convertCoordinatesToAlgebraic(coordinateX, coordinateY), piece);
-
-		squares[coordinateX][coordinateY] = square;
+		squares[coordinateX][coordinateY] = new Square(convertCoordinatesToAlgebraic(coordinateX, coordinateY), piece);
 	}
 
 	public void print(boolean onlyCoordinates) {
@@ -129,25 +127,29 @@ public class Chessboard {
 	public String compare(Chessboard previousChessboard) {
 		logger.debug("Starting to compare");
 
-		Square startingSquare;
+		Square startingSquare = null;
+		Square previousStateInfinalSquare = null;
 		Square finalSquare = null;
 
 		for (int y = 0; y < 8; ++y) {
 			for (int x = 0; x < 8; ++x) {
 				if (previousChessboard.squares[x][y].toString().equals(squares[x][y].toString())) {
-					logger.debug("Equal squares previous:{} current:{}", previousChessboard.squares[x][y], squares[x][y]);
+//					logger.debug("Equal squares previous:{} current:{}", previousChessboard.squares[x][y], squares[x][y]);
 				} else {
 					logger.debug("Not equals previous:{} current:{}", previousChessboard.squares[x][y], squares[x][y]);
 
-					if (previousChessboard.squares[x][y].toString().equals("X")) {
-						logger.debug("The previous square is empty, starting point?");
+					if (!previousChessboard.squares[x][y].isEmpty() && squares[x][y].isEmpty()) {
+						logger.debug("\t There was a piece here which one? {}", previousChessboard.squares[x][y]);
 						startingSquare = previousChessboard.squares[x][y];
-
-						logger.debug("The current square is full, final point?");
+					} else {
+						logger.debug("\t Final square? {}", squares[x][y].getAlgebraicCoordinate());
+						previousStateInfinalSquare = previousChessboard.squares[x][y];
 						finalSquare = squares[x][y];
 					}
 
-					logger.debug("potencial play:{}", finalSquare.getPiece().getFenLetter() + "" + finalSquare.getAlgebraicCoordinate());
+					if (startingSquare != null && finalSquare != null) {
+						return examineMovement(startingSquare, previousStateInfinalSquare, finalSquare);
+					}
 				}
 			}
 		}
@@ -174,16 +176,21 @@ public class Chessboard {
 		return squares[Math.abs(colInArray - 7)][row - 1];
 	}
 
-	private String convertCoordinatesToAlgebraic(int coordinateX, int coordinateY) {
-		String retValue = null;
+	private String examineMovement(Square startingSquare, Square previousStateInfinalSquare, Square finalSquare) {
+		logger.trace("Piece in starting square:{} piece was before in final movement:{} final square:{}",
+				startingSquare.getPiece().getFenLetter(),
+				previousStateInfinalSquare.isEmpty() ? "none" : previousStateInfinalSquare.getPiece().getFenLetter(),
+				finalSquare.getAlgebraicCoordinate());
 
+		return startingSquare.getPiece().getMovement(startingSquare, previousStateInfinalSquare, finalSquare);
+	}
+
+	private String convertCoordinatesToAlgebraic(int coordinateX, int coordinateY) {
 		if (whitePiecesBottom) {
-			retValue = algebraicAnnotationForCols[coordinateX] + algebraicAnnotationForRows[Math.abs(coordinateY - 7)];
-		} else {
-			retValue = algebraicAnnotationForCols[Math.abs(coordinateX - 7)] + algebraicAnnotationForRows[coordinateY];
+			return algebraicAnnotationForCols[coordinateX] + algebraicAnnotationForRows[Math.abs(coordinateY - 7)];
 		}
 
-		return retValue;
+		return algebraicAnnotationForCols[Math.abs(coordinateX - 7)] + algebraicAnnotationForRows[coordinateY];
 	}
 
 }
