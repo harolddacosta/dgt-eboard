@@ -3,6 +3,8 @@ package com.gvt.chessboard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.gvt.chessboard.Chessboard.PlayMode;
+
 public class Rook implements Piece {
 
 	private static Logger logger = LoggerFactory.getLogger(Rook.class);
@@ -25,7 +27,7 @@ public class Rook implements Piece {
 	}
 
 	@Override
-	public String getMovement(Square startingSquare, Square previousStateInfinalSquare, Square finalSquare) {
+	public String getMovement(Square startingSquare, Square previousStateInfinalSquare, Square finalSquare, PlayMode playMode) {
 		String retValue = null;
 		boolean thereWasCapture = false;
 
@@ -51,6 +53,10 @@ public class Rook implements Piece {
 			logger.info("Move:{}", "O-O-O");
 
 			return "O-O-O";
+		}
+
+		if (playMode == PlayMode.UCI) {
+			return startingSquare.getAlgebraicCoordinate() + finalSquare.getAlgebraicCoordinate();
 		}
 
 		if (!previousStateInfinalSquare.isEmpty()) {

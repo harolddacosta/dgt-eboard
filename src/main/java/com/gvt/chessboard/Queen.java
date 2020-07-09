@@ -3,6 +3,8 @@ package com.gvt.chessboard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.gvt.chessboard.Chessboard.PlayMode;
+
 public class Queen implements Piece {
 
 	private static Logger logger = LoggerFactory.getLogger(Queen.class);
@@ -24,9 +26,13 @@ public class Queen implements Piece {
 	}
 
 	@Override
-	public String getMovement(Square startingSquare, Square previousStateInfinalSquare, Square finalSquare) {
+	public String getMovement(Square startingSquare, Square previousStateInfinalSquare, Square finalSquare, PlayMode playMode) {
 		String retValue = null;
 		boolean thereWasCapture = false;
+
+		if (playMode == PlayMode.UCI) {
+			return startingSquare.getAlgebraicCoordinate() + finalSquare.getAlgebraicCoordinate();
+		}
 
 		if (!previousStateInfinalSquare.isEmpty()) {
 			logger.trace("There was a capture");

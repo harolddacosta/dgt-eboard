@@ -3,6 +3,7 @@ package com.gvt.chessboard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.gvt.chessboard.Chessboard.PlayMode;
 import com.gvt.chessboard.Piece.Color;
 
 public class King implements Piece {
@@ -26,7 +27,7 @@ public class King implements Piece {
 	}
 
 	@Override
-	public String getMovement(Square startingSquare, Square previousStateInfinalSquare, Square finalSquare) {
+	public String getMovement(Square startingSquare, Square previousStateInfinalSquare, Square finalSquare, PlayMode playMode) {
 		String retValue = null;
 		boolean thereWasCapture = false;
 
@@ -54,6 +55,10 @@ public class King implements Piece {
 			logger.info("Move:{}", "O-O-O");
 
 			return "O-O-O";
+		}
+
+		if (playMode == PlayMode.UCI) {
+			return startingSquare.getAlgebraicCoordinate() + finalSquare.getAlgebraicCoordinate();
 		}
 
 		if (!previousStateInfinalSquare.isEmpty()) {

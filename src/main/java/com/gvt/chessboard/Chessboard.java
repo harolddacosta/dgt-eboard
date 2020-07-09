@@ -8,6 +8,10 @@ import com.gvt.chessboard.Piece.Color;
 
 public class Chessboard {
 
+	public enum PlayMode {
+		SAN, UCI
+	}
+
 	private static Logger logger = LoggerFactory.getLogger(Chessboard.class);
 
 	private static final String[] algebraicAnnotationForCols = new String[] { "a", "b", "c", "d", "e", "f", "g", "h" };
@@ -16,16 +20,20 @@ public class Chessboard {
 	private boolean whitePiecesBottom = false;
 	private Square[][] squares = new Square[8][8];
 
-	public Color playForColor;
+	private Color playForColor;
+	private PlayMode playMode = PlayMode.SAN;
 
 	public Chessboard(boolean whitePiecesBottom) {
 		this.whitePiecesBottom = whitePiecesBottom;
 
-		for (int y = 0; y < 8; ++y) {
-			for (int x = 0; x < 8; ++x) {
-				squares[x][y] = new Square(convertCoordinatesToAlgebraic(x, y));
-			}
-		}
+		initChessboard();
+	}
+
+	public Chessboard(boolean whitePiecesBottom, PlayMode playMode) {
+		this.whitePiecesBottom = whitePiecesBottom;
+		this.playMode = playMode;
+
+		initChessboard();
 	}
 
 	public void setPiece(String fenPiece, int coordinateX, int coordinateY) {
@@ -180,13 +188,21 @@ public class Chessboard {
 		return squares[Math.abs(colInArray - 7)][row - 1];
 	}
 
+	public Color getPlayForColor() {
+		return playForColor;
+	}
+
+	public void setPlayMode(PlayMode playMode) {
+		this.playMode = playMode;
+	}
+
 	private String examineMovement(Square startingSquare, Square previousStateInfinalSquare, Square finalSquare) {
 		logger.trace("Piece in starting square:{} piece was before in final movement:{} final square:{}",
 				startingSquare.getPiece().getFenLetter(),
 				previousStateInfinalSquare.isEmpty() ? "none" : previousStateInfinalSquare.getPiece().getFenLetter(),
 				finalSquare.getAlgebraicCoordinate());
 
-		return startingSquare.getPiece().getMovement(startingSquare, previousStateInfinalSquare, finalSquare);
+		return startingSquare.getPiece().getMovement(startingSquare, previousStateInfinalSquare, finalSquare, playMode);
 	}
 
 	private String convertCoordinatesToAlgebraic(int coordinateX, int coordinateY) {
@@ -195,6 +211,14 @@ public class Chessboard {
 		}
 
 		return algebraicAnnotationForCols[Math.abs(coordinateX - 7)] + algebraicAnnotationForRows[coordinateY];
+	}
+
+	private void initChessboard() {
+		for (int y = 0; y < 8; ++y) {
+			for (int x = 0; x < 8; ++x) {
+				squares[x][y] = new Square(convertCoordinatesToAlgebraic(x, y));
+			}
+		}
 	}
 
 }

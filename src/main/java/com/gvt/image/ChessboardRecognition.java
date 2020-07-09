@@ -29,6 +29,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.gvt.chessboard.Chessboard;
+import com.gvt.chessboard.Chessboard.PlayMode;
 import com.gvt.chessboard.Piece.Color;
 import com.gvt.dgt.DgtEBoard;
 import com.jamonapi.Monitor;
@@ -105,7 +106,7 @@ public class ChessboardRecognition extends Thread {
 			srcGray = new Mat();
 			Imgproc.cvtColor(copy, srcGray, Imgproc.COLOR_BGR2GRAY);
 
-			extractChessboardCoordinates();
+			extractChessboardCoordinates(null);
 //			showChessboardCoordinates(copy);
 
 			double squareWidth = centerBoxPoints[1][0].x - centerBoxPoints[0][0].x;
@@ -158,6 +159,7 @@ public class ChessboardRecognition extends Thread {
 		int qtyWhiteKings = 0;
 
 		currentChessboard = new Chessboard(whitePiecesBottom);
+		currentChessboard.setPlayMode(PlayMode.UCI);
 
 		for (int y = 0; y < 8; ++y) {
 			int emptySquares = 0;
@@ -352,14 +354,14 @@ public class ChessboardRecognition extends Thread {
 			logger.info("Play:{}", play);
 
 			try {
-				if (currentChessboard.playForColor == Color.BLACK) {
+				if (currentChessboard.getPlayForColor() == Color.BLACK) {
 					dgtEBoard.getDll()._DGTDLL_PlayBlackMove(play);
 					dgtEBoard.getDll()._DGTDLL_DisplayClockMessage(play, 3000);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
 
-				if (currentChessboard.playForColor == Color.BLACK) {
+				if (currentChessboard.getPlayForColor() == Color.BLACK) {
 					dgtEBoard.getDll()._DGTDLL_PlayBlackMove(play);
 					dgtEBoard.getDll()._DGTDLL_DisplayClockMessage(play, 3000);
 				}
@@ -575,9 +577,9 @@ public class ChessboardRecognition extends Thread {
 		}
 	}
 
-	private void extractChessboardCoordinates() {
+	public Mat extractChessboardCoordinates(Mat showCalibrationIn) {
 		if (chessboardInfoExtracted) {
-			return;
+			return null;
 		}
 
 		Monitor mon = MonitorFactory.start("Chessboard information extraction");
@@ -594,7 +596,7 @@ public class ChessboardRecognition extends Thread {
 			logger.trace("Is a chessboard?:{} in size:{}", isChessboard, squareCorners);
 
 			if (squareCorners <= 0) {
-				return;
+				return null;
 			}
 
 			--squareCorners;
@@ -610,7 +612,9 @@ public class ChessboardRecognition extends Thread {
 			if (corners.rows() > 0 && corners.cols() > 0) {
 				squaresFound = true;
 
-//				Calib3d.drawChessboardCorners(copy, squaresSize, corners, isChessboard);
+				if (showCalibrationIn != null) {
+					Calib3d.drawChessboardCorners(showCalibrationIn, squaresSize, corners, isChessboard);
+				}
 			}
 		}
 
@@ -674,9 +678,11 @@ public class ChessboardRecognition extends Thread {
 		logger.debug("Chessboard information extraction:{}", mon);
 
 		chessboardInfoExtracted = true;
+
+		return showCalibrationIn;
 	}
 
-	private void showChessboardCoordinates(Mat copy) {
+	public void showChessboardCoordinates(Mat copy) {
 		int squaresCount = 0;
 		for (int y = 0; y < 8; ++y) {
 			for (int x = 0; x < 8; ++x) {
@@ -696,12 +702,16 @@ public class ChessboardRecognition extends Thread {
 		}
 	}
 
-	private Mat bufferedImage2Mat(BufferedImage image) throws IOException {
+	public Mat bufferedImage2Mat(BufferedImage image) throws IOException {
 		try (ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream()) {
 			ImageIO.write(image, "jpg", byteArrayOutputStream);
 
 			return Imgcodecs.imdecode(new MatOfByte(byteArrayOutputStream.toByteArray()), Imgcodecs.IMREAD_UNCHANGED);
 		}
+	}
+
+	public void setSrcGray(Mat srcGray) {
+		this.srcGray = srcGray;
 	}
 
 }

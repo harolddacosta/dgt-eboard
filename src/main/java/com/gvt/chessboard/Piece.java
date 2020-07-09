@@ -1,5 +1,7 @@
 package com.gvt.chessboard;
 
+import com.gvt.chessboard.Chessboard.PlayMode;
+
 public interface Piece {
 
 	enum Color {
@@ -10,5 +12,5 @@ public interface Piece {
 
 	char getFenLetter();
 
-	String getMovement(Square startingSquare, Square previousStateInfinalSquare, Square finalSquare);
+	String getMovement(Square startingSquare, Square previousStateInfinalSquare, Square finalSquare, PlayMode playMode);
 }
