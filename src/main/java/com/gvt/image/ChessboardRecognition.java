@@ -117,19 +117,8 @@ public class ChessboardRecognition extends Thread {
 
 			int minSize = (int) (squareWidth * 0.2);
 
-			Imgproc.threshold(srcGray, srcGray, 125, 255, Imgproc.THRESH_BINARY_INV); // 125-255
-			Imgproc.findContours(srcGray, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
-
-			logger.trace("Contours size:{}", contours.size());
-			piecesInSquares = new Rect[8][8];
-			for (int i = 0; i < contours.size(); i++) {
-				Rect rect = Imgproc.boundingRect(contours.get(i));
-				if ((rect.height > minSize && rect.height < squareHeight) && (rect.width > minSize && rect.width < squareWidth)) {
-//					Imgproc.rectangle(copy, rect, new Scalar(255, 255, 0));
-
-					putPieceInsideSquare(rect);
-				}
-			}
+			extractContours(contours);
+			setRectForPieces(contours, squareWidth, squareHeight, minSize);
 
 			if (checkForInitialPosition()) {
 				// restart a game, scan for pieces to compare later
@@ -146,10 +135,27 @@ public class ChessboardRecognition extends Thread {
 		executingUpdate.set(false);
 	}
 
-	private void createFEN() {
+	public void setRectForPieces(List<MatOfPoint> contours, double squareWidth, double squareHeight, int minSize) {
+		piecesInSquares = new Rect[8][8];
+		for (int i = 0; i < contours.size(); i++) {
+			Rect rect = Imgproc.boundingRect(contours.get(i));
+			if ((rect.height > minSize && rect.height < squareHeight) && (rect.width > minSize && rect.width < squareWidth)) {
+				putPieceInsideSquare(rect);
+			}
+		}
+	}
+
+	public void extractContours(List<MatOfPoint> contours) {
+		Imgproc.threshold(srcGray, srcGray, 125, 255, Imgproc.THRESH_BINARY_INV); // 125-255
+		Imgproc.findContours(srcGray, contours, new Mat(), Imgproc.RETR_EXTERNAL, Imgproc.CHAIN_APPROX_SIMPLE);
+
+		logger.trace("extracted countours (less is better? yes):{}", contours.size());
+	}
+
+	public void createFEN() {
 		logger.trace("Starting FEN diagram creation");
 
-		printPiecesInSquaresDiagram();
+//		printPiecesInSquaresDiagram();
 
 		StringBuilder fen = new StringBuilder();
 
@@ -161,6 +167,7 @@ public class ChessboardRecognition extends Thread {
 		currentChessboard = new Chessboard(whitePiecesBottom);
 		currentChessboard.setPlayMode(PlayMode.UCI);
 
+		logger.debug("***************** STARTING RECOGNITION *****************");
 		for (int y = 0; y < 8; ++y) {
 			int emptySquares = 0;
 
@@ -175,7 +182,6 @@ public class ChessboardRecognition extends Thread {
 					boolean pieceFound = false;
 
 					// Check first black pieces
-					logger.trace("Checking first all black pieces");
 					for (int pieceType = 0; pieceType < 6; ++pieceType) {
 						if (pieceType == 0 && qtyBlackPawns == 8) {
 							logger.trace("All black pawns found, following with the next piece");
@@ -189,7 +195,7 @@ public class ChessboardRecognition extends Thread {
 							continue;
 						}
 
-						boolean isPiece = isPiece(x, y, pieceType, blackPieces);
+						boolean isPiece = isPiece(x, y, pieceType, blackPieces, Color.BLACK);
 
 						if (isPiece) {
 							if (emptySquares > 0) {
@@ -244,7 +250,6 @@ public class ChessboardRecognition extends Thread {
 
 					// Now check for white pieces
 					if (!pieceFound) {
-						logger.trace("Checkig then all white pieces");
 						for (int pieceType = 0; pieceType < 6; ++pieceType) {
 							if (pieceType == 0 && qtyWhitePawns == 8) {
 								logger.trace("All white pawns found, following with the next piece");
@@ -258,7 +263,7 @@ public class ChessboardRecognition extends Thread {
 								continue;
 							}
 
-							boolean isPiece = isPiece(x, y, pieceType, whitePieces);
+							boolean isPiece = isPiece(x, y, pieceType, whitePieces, Color.WHITE);
 
 							if (isPiece) {
 								if (emptySquares > 0) {
@@ -320,6 +325,7 @@ public class ChessboardRecognition extends Thread {
 				}
 			}
 		}
+		logger.debug("***************** Finish RECOGNITION *****************");
 
 		if (previousFEN == null) {
 			previousFEN = fen.toString();
@@ -353,20 +359,25 @@ public class ChessboardRecognition extends Thread {
 			String play = currentChessboard.compare(previousChessboard);
 			logger.info("Play:{}", play);
 
-			try {
-				if (currentChessboard.getPlayForColor() == Color.BLACK) {
-					dgtEBoard.getDll()._DGTDLL_PlayBlackMove(play);
-					dgtEBoard.getDll()._DGTDLL_DisplayClockMessage(play, 3000);
-				}
-			} catch (Exception e) {
-				e.printStackTrace();
+			if (dgtEBoard != null) {
+				try {
+					if (whitePiecesBottom && currentChessboard.getPlayForColor() == Color.BLACK) {
+						dgtEBoard.getDll()._DGTDLL_PlayBlackMove(play);
+						dgtEBoard.getDll()._DGTDLL_DisplayClockMessage(play, 3000);
+					} else if (!whitePiecesBottom && currentChessboard.getPlayForColor() == Color.WHITE) {
+						dgtEBoard.getDll()._DGTDLL_PlayWhiteMove(play);
+						dgtEBoard.getDll()._DGTDLL_DisplayClockMessage(play, 3000);
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
 
-				if (currentChessboard.getPlayForColor() == Color.BLACK) {
-					dgtEBoard.getDll()._DGTDLL_PlayBlackMove(play);
-					dgtEBoard.getDll()._DGTDLL_DisplayClockMessage(play, 3000);
-				}
+					if (currentChessboard.getPlayForColor() == Color.BLACK) {
+						dgtEBoard.getDll()._DGTDLL_PlayBlackMove(play);
+						dgtEBoard.getDll()._DGTDLL_DisplayClockMessage(play, 3000);
+					}
 //				ChessboardRecognition repair = new ChessboardRecognition();
 //				repair.start();
+				}
 			}
 
 			previousChessboard = currentChessboard;
@@ -393,7 +404,7 @@ public class ChessboardRecognition extends Thread {
 		}
 	}
 
-	private boolean isPiece(int x, int y, int pieceType, Mat[] piecesToCompare) {
+	private boolean isPiece(int x, int y, int pieceType, Mat[] piecesToCompare, Color colorPieces) {
 		boolean retValue = false;
 
 		Mat pieceRecognized = new Mat();
@@ -407,7 +418,8 @@ public class ChessboardRecognition extends Thread {
 		if (mmr.maxVal > 0.7) {
 			switch (pieceType) {
 			case 1:
-				logger.trace("Found Rook in [{}][{}] with %{}", x, y, mmr.maxVal);
+				logger.debug("Found {} Rook in [{}] with %{}", colorPieces,
+						Chessboard.convertCoordinatesToAlgebraic(x, y, whitePiecesBottom), mmr.maxVal);
 
 				retValue = true;
 
@@ -420,23 +432,28 @@ public class ChessboardRecognition extends Thread {
 		if (mmr.maxVal > 0.75) {
 			switch (pieceType) {
 			case 0:
-				logger.trace("Found Pawn in [{}][{}] with %{}", x, y, mmr.maxVal);
+				logger.debug("Found {} Pawn in [{}] with %{}", colorPieces,
+						Chessboard.convertCoordinatesToAlgebraic(x, y, whitePiecesBottom), mmr.maxVal);
 
 				break;
 			case 2:
-				logger.trace("Found Knight in [{}][{}] with %{}", x, y, mmr.maxVal);
+				logger.debug("Found {} Knight in [{}] with %{}", colorPieces,
+						Chessboard.convertCoordinatesToAlgebraic(x, y, whitePiecesBottom), mmr.maxVal);
 
 				break;
 			case 3:
-				logger.trace("Found Bishop in [{}][{}] with %{}", x, y, mmr.maxVal);
+				logger.debug("Found {} Bishop in [{}] with %{}", colorPieces,
+						Chessboard.convertCoordinatesToAlgebraic(x, y, whitePiecesBottom), mmr.maxVal);
 
 				break;
 			case 4:
-				logger.trace("Found Queen in [{}][{}] with %{}", x, y, mmr.maxVal);
+				logger.debug("Found {} Queen in [{}] with %{}", colorPieces,
+						Chessboard.convertCoordinatesToAlgebraic(x, y, whitePiecesBottom), mmr.maxVal);
 
 				break;
 			case 5:
-				logger.trace("Found King in [{}][{}] with %{}", x, y, mmr.maxVal);
+				logger.debug("Found {} King in [{}] with %{}", colorPieces,
+						Chessboard.convertCoordinatesToAlgebraic(x, y, whitePiecesBottom), mmr.maxVal);
 
 				break;
 			default:
@@ -449,7 +466,7 @@ public class ChessboardRecognition extends Thread {
 		return retValue;
 	}
 
-	private void cropImagesToCompare() {
+	public void cropImagesToCompare() {
 		// Positions for array
 		// 0=Pawn, 1=Rook, 2=Knight, 3=Bishop, 4=Queen, 5=King
 		if (whitePiecesBottom) {
@@ -483,7 +500,7 @@ public class ChessboardRecognition extends Thread {
 		}
 	}
 
-	private void recognizePiecesColor() { // Check only pawn color
+	public void recognizePiecesColor() { // Check only pawn color
 		Mat piece = srcGray.submat(piecesInSquares[0][1]);
 		int qtyColorPixelsTop = 0;
 		for (int a = 0; a < piece.rows(); a++) {
@@ -514,7 +531,7 @@ public class ChessboardRecognition extends Thread {
 		logger.trace("White pieces bottom? {}", whitePiecesBottom);
 	}
 
-	private boolean checkForInitialPosition() {
+	public boolean checkForInitialPosition() {
 		boolean retValue = true;
 
 		int qtyPieces = 0;
@@ -714,4 +731,27 @@ public class ChessboardRecognition extends Thread {
 		this.srcGray = srcGray;
 	}
 
+	public Mat getSrcGray() {
+		return srcGray;
+	}
+
+	public Point[][] getCenterBoxPoints() {
+		return centerBoxPoints;
+	}
+
+	public Rect[][] getPiecesInSquares() {
+		return piecesInSquares;
+	}
+
+	public boolean isWhitePiecesBottom() {
+		return whitePiecesBottom;
+	}
+
+	public Mat[] getWhitePieces() {
+		return whitePieces;
+	}
+
+	public Mat[] getBlackPieces() {
+		return blackPieces;
+	}
 }

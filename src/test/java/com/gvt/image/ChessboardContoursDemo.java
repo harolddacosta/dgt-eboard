@@ -9,6 +9,8 @@ import java.awt.Robot;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.ImageIcon;
@@ -18,6 +20,8 @@ import javax.swing.JPanel;
 import javax.swing.Timer;
 
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfPoint;
+import org.opencv.core.Scalar;
 import org.opencv.highgui.HighGui;
 import org.opencv.imgproc.Imgproc;
 import org.slf4j.Logger;
@@ -25,9 +29,9 @@ import org.slf4j.LoggerFactory;
 
 import nu.pattern.OpenCV;
 
-class ChessboardCoordinatesExtraction {
+class ChessboardContours {
 
-	private static Logger logger = LoggerFactory.getLogger(ChessboardCoordinatesExtraction.class);
+	private static Logger logger = LoggerFactory.getLogger(ChessboardContours.class);
 
 	public JFrame frame;
 	private JLabel imgLabel;
@@ -36,7 +40,7 @@ class ChessboardCoordinatesExtraction {
 
 	AtomicBoolean executingUpdate = new AtomicBoolean(false);
 
-	public ChessboardCoordinatesExtraction(String[] args) {
+	public ChessboardContours(String[] args) {
 		// Create and set up the window.
 		frame = new JFrame("Shi-Tomasi corner detector demo");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -50,7 +54,6 @@ class ChessboardCoordinatesExtraction {
 		frame.setVisible(true);
 
 		int timerDelay = 300;
-		int count = 1;
 		new Timer(timerDelay, new ActionListener() {
 
 			@Override
@@ -78,6 +81,7 @@ class ChessboardCoordinatesExtraction {
 
 	public void update() {
 		try {
+			List<MatOfPoint> contours = new ArrayList<>();
 			Robot robot = new Robot();
 
 			BufferedImage screenFullImage = robot.createScreenCapture(new Rectangle(2487, 124, 760, 760));
@@ -88,20 +92,44 @@ class ChessboardCoordinatesExtraction {
 			Imgproc.cvtColor(copy, srcGray, Imgproc.COLOR_BGR2GRAY);
 
 			chessboardRecognition.setSrcGray(srcGray);
-			copy = chessboardRecognition.extractChessboardCoordinates(copy);
-			chessboardRecognition.showChessboardCoordinates(copy);
+			chessboardRecognition.extractChessboardCoordinates(null);
 
-			imgLabel.setIcon(new ImageIcon(HighGui.toBufferedImage(copy)));
+			double squareWidth = chessboardRecognition.getCenterBoxPoints()[1][0].x - chessboardRecognition.getCenterBoxPoints()[0][0].x;
+			double squareHeight = chessboardRecognition.getCenterBoxPoints()[0][1].y - chessboardRecognition.getCenterBoxPoints()[0][0].y;
+
+			squareWidth = squareWidth - (squareWidth * 0.01);
+			squareHeight = squareHeight - (squareHeight * 0.01);
+
+			int minSize = (int) (squareWidth * 0.2);
+
+			chessboardRecognition.extractContours(contours);
+			chessboardRecognition.setRectForPieces(contours, squareWidth, squareHeight, minSize);
+
+			logger.debug("extracted countours (less is better? yes):{}", contours.size());
+
+			for (int y = 0; y < 8; ++y) {
+				for (int x = 0; x < 8; ++x) {
+					try {
+						Imgproc.rectangle(chessboardRecognition.getSrcGray(), chessboardRecognition.getPiecesInSquares()[x][y],
+								new Scalar(255, 128, 255));
+					} catch (Exception e) {
+//						logger.error("Error");
+					}
+				}
+			}
+
+			if (copy != null) {
+				imgLabel.setIcon(new ImageIcon(HighGui.toBufferedImage(chessboardRecognition.getSrcGray())));
+			}
+
 			frame.repaint();
-
-			executingUpdate.set(true);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 }
 
-public class ChessboardCoordinatesExtractionDemo {
+public class ChessboardContoursDemo {
 
 	public static void main(String[] args) {
 		// Load the native OpenCV library
@@ -114,7 +142,7 @@ public class ChessboardCoordinatesExtractionDemo {
 
 			@Override
 			public void run() {
-				new ChessboardCoordinatesExtraction(args);
+				new ChessboardContours(args);
 			}
 		});
 	}

@@ -80,7 +80,7 @@ public class Chessboard {
 			break;
 		}
 
-		squares[coordinateX][coordinateY] = new Square(convertCoordinatesToAlgebraic(coordinateX, coordinateY), piece);
+		squares[coordinateX][coordinateY] = new Square(convertCoordinatesToAlgebraic(coordinateX, coordinateY, whitePiecesBottom), piece);
 	}
 
 	public void print(boolean onlyCoordinates) {
@@ -205,7 +205,7 @@ public class Chessboard {
 		return startingSquare.getPiece().getMovement(startingSquare, previousStateInfinalSquare, finalSquare, playMode);
 	}
 
-	private String convertCoordinatesToAlgebraic(int coordinateX, int coordinateY) {
+	public static String convertCoordinatesToAlgebraic(int coordinateX, int coordinateY, boolean whitePiecesBottom) {
 		if (whitePiecesBottom) {
 			return algebraicAnnotationForCols[coordinateX] + algebraicAnnotationForRows[Math.abs(coordinateY - 7)];
 		}
@@ -216,7 +216,7 @@ public class Chessboard {
 	private void initChessboard() {
 		for (int y = 0; y < 8; ++y) {
 			for (int x = 0; x < 8; ++x) {
-				squares[x][y] = new Square(convertCoordinatesToAlgebraic(x, y));
+				squares[x][y] = new Square(convertCoordinatesToAlgebraic(x, y, whitePiecesBottom));
 			}
 		}
 	}
