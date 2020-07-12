@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import com.gvt.dgt.DgtEBoard;
 import com.gvt.windows.Keyboard;
+import com.gvt.windows.MainWindows;
 import com.sun.jna.Native; //NOSONAR
 import com.sun.jna.Pointer;
 import com.sun.jna.platform.win32.User32;
@@ -25,12 +26,14 @@ public class DgtEBoardRabbit implements DgtEBoard {
 
 		logger.debug("Received WhiteMoveInput:{}", str);
 
-		try {
-			keyboard = new Keyboard();
-			keyboard.type(str);
-		} catch (AWTException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		if (MainWindows.chessboardRecognition.isWhitePiecesBottom()) {
+			try {
+				keyboard = new Keyboard();
+				keyboard.type(str);
+			} catch (AWTException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	};
 
@@ -44,13 +47,15 @@ public class DgtEBoardRabbit implements DgtEBoard {
 
 		logger.debug("Received BlackMoveInput:{}", str);
 
-//		try {
-//			keyboard = new Keyboard();
-//			keyboard.type(str);
-//		} catch (AWTException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+		if (!MainWindows.chessboardRecognition.isWhitePiecesBottom()) {
+			try {
+				keyboard = new Keyboard();
+				keyboard.type(str);
+			} catch (AWTException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
 	};
 
 	@Override
