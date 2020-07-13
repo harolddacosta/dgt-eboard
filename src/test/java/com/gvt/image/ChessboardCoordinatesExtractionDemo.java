@@ -80,7 +80,7 @@ class ChessboardCoordinatesExtraction {
 		try {
 			Robot robot = new Robot();
 
-			BufferedImage screenFullImage = robot.createScreenCapture(new Rectangle(2487, 124, 760, 760));
+			BufferedImage screenFullImage = robot.createScreenCapture(new Rectangle(1048, 168, 756, 764));
 //			BufferedImage screenFullImage = robot.createScreenCapture(new Rectangle(2637, 169, 457, 457));
 			Mat src = chessboardRecognition.bufferedImage2Mat(screenFullImage);
 			Mat copy = src.clone();

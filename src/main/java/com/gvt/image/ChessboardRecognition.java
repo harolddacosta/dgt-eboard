@@ -1,6 +1,7 @@
 package com.gvt.image;
 
 import java.awt.Robot;
+import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -167,7 +168,7 @@ public class ChessboardRecognition extends Thread {
 		currentChessboard = new Chessboard(whitePiecesBottom);
 		currentChessboard.setPlayMode(PlayMode.UCI);
 
-		logger.debug("***************** STARTING RECOGNITION *****************");
+		logger.trace("***************** STARTING RECOGNITION *****************");
 		for (int y = 0; y < 8; ++y) {
 			int emptySquares = 0;
 
@@ -325,7 +326,7 @@ public class ChessboardRecognition extends Thread {
 				}
 			}
 		}
-		logger.debug("***************** Finish RECOGNITION *****************");
+		logger.trace("***************** Finish RECOGNITION *****************");
 
 		if (previousFEN == null) {
 			previousFEN = fen.toString();
@@ -364,19 +365,19 @@ public class ChessboardRecognition extends Thread {
 					if (whitePiecesBottom && currentChessboard.getPlayForColor() == Color.BLACK) {
 						dgtEBoard.getDll()._DGTDLL_PlayBlackMove(play);
 						dgtEBoard.getDll()._DGTDLL_DisplayClockMessage(play, 3000);
+						Toolkit.getDefaultToolkit().beep();
+						MainWindows.label.setText(play);
+						MainWindows.label.repaint();
 					} else if (!whitePiecesBottom && currentChessboard.getPlayForColor() == Color.WHITE) {
 						dgtEBoard.getDll()._DGTDLL_PlayWhiteMove(play);
 						dgtEBoard.getDll()._DGTDLL_DisplayClockMessage(play, 3000);
+						Toolkit.getDefaultToolkit().beep();
+						MainWindows.label.setText(play);
+						MainWindows.label.repaint();
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
 
-					if (currentChessboard.getPlayForColor() == Color.BLACK) {
-						dgtEBoard.getDll()._DGTDLL_PlayBlackMove(play);
-						dgtEBoard.getDll()._DGTDLL_DisplayClockMessage(play, 3000);
-					}
-//				ChessboardRecognition repair = new ChessboardRecognition();
-//				repair.start();
 				}
 			}
 
@@ -418,7 +419,7 @@ public class ChessboardRecognition extends Thread {
 		if (mmr.maxVal > 0.7) {
 			switch (pieceType) {
 			case 1:
-				logger.debug("Found {} Rook in [{}] with %{}", colorPieces,
+				logger.trace("Found {} Rook in [{}] with %{}", colorPieces,
 						Chessboard.convertCoordinatesToAlgebraic(x, y, whitePiecesBottom), mmr.maxVal);
 
 				retValue = true;
@@ -432,27 +433,27 @@ public class ChessboardRecognition extends Thread {
 		if (mmr.maxVal > 0.75) {
 			switch (pieceType) {
 			case 0:
-				logger.debug("Found {} Pawn in [{}] with %{}", colorPieces,
+				logger.trace("Found {} Pawn in [{}] with %{}", colorPieces,
 						Chessboard.convertCoordinatesToAlgebraic(x, y, whitePiecesBottom), mmr.maxVal);
 
 				break;
 			case 2:
-				logger.debug("Found {} Knight in [{}] with %{}", colorPieces,
+				logger.trace("Found {} Knight in [{}] with %{}", colorPieces,
 						Chessboard.convertCoordinatesToAlgebraic(x, y, whitePiecesBottom), mmr.maxVal);
 
 				break;
 			case 3:
-				logger.debug("Found {} Bishop in [{}] with %{}", colorPieces,
+				logger.trace("Found {} Bishop in [{}] with %{}", colorPieces,
 						Chessboard.convertCoordinatesToAlgebraic(x, y, whitePiecesBottom), mmr.maxVal);
 
 				break;
 			case 4:
-				logger.debug("Found {} Queen in [{}] with %{}", colorPieces,
+				logger.trace("Found {} Queen in [{}] with %{}", colorPieces,
 						Chessboard.convertCoordinatesToAlgebraic(x, y, whitePiecesBottom), mmr.maxVal);
 
 				break;
 			case 5:
-				logger.debug("Found {} King in [{}] with %{}", colorPieces,
+				logger.trace("Found {} King in [{}] with %{}", colorPieces,
 						Chessboard.convertCoordinatesToAlgebraic(x, y, whitePiecesBottom), mmr.maxVal);
 
 				break;

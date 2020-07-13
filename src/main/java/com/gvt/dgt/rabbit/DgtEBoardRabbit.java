@@ -19,7 +19,7 @@ public class DgtEBoardRabbit implements DgtEBoard {
 
 	private boolean running = true;
 	private DgtEBoardLib dll = null;
-	Keyboard keyboard;
+	private Keyboard keyboard;
 
 	private DgtEBoardLib.CallbackFunctionCharPtr whiteMoveInput = data -> {
 		String str = data.getString(0);

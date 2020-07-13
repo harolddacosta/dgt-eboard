@@ -67,6 +67,7 @@ import static java.awt.event.KeyEvent.VK_Z;
 
 import java.awt.AWTException;
 import java.awt.Robot;
+import java.awt.event.KeyEvent;
 
 public class Keyboard {
 
@@ -81,11 +82,17 @@ public class Keyboard {
 	}
 
 	public void type(CharSequence characters) {
+		for (int i = 0; i < 6; ++i) {
+			doType(KeyEvent.VK_BACK_SPACE);
+		}
+
 		int length = characters.length();
 		for (int i = 0; i < length; i++) {
 			char character = characters.charAt(i);
 			type(character);
 		}
+
+		doType(KeyEvent.VK_ENTER);
 	}
 
 	public void type(char character) {
