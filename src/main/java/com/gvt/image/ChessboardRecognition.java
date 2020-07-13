@@ -365,13 +365,13 @@ public class ChessboardRecognition extends Thread {
 					if (whitePiecesBottom && currentChessboard.getPlayForColor() == Color.BLACK) {
 						dgtEBoard.getDll()._DGTDLL_PlayBlackMove(play);
 						dgtEBoard.getDll()._DGTDLL_DisplayClockMessage(play, 1500);
-						Toolkit.getDefaultToolkit().beep();
+//						Toolkit.getDefaultToolkit().beep();
 						MainWindows.label.setText(play);
 						MainWindows.label.repaint();
 					} else if (!whitePiecesBottom && currentChessboard.getPlayForColor() == Color.WHITE) {
 						dgtEBoard.getDll()._DGTDLL_PlayWhiteMove(play);
 						dgtEBoard.getDll()._DGTDLL_DisplayClockMessage(play, 1500);
-						Toolkit.getDefaultToolkit().beep();
+//						Toolkit.getDefaultToolkit().beep();
 						MainWindows.label.setText(play);
 						MainWindows.label.repaint();
 					}
