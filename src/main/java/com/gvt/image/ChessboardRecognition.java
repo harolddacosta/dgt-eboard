@@ -1,6 +1,5 @@
 package com.gvt.image;
 
-import java.awt.Rectangle;
 import java.awt.Robot;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
@@ -32,6 +31,7 @@ import com.gvt.chessboard.Chessboard;
 import com.gvt.chessboard.Chessboard.PlayMode;
 import com.gvt.chessboard.Piece.Color;
 import com.gvt.dgt.DgtEBoard;
+import com.gvt.windows.MainWindows;
 import com.jamonapi.Monitor;
 import com.jamonapi.MonitorFactory;
 
@@ -97,8 +97,8 @@ public class ChessboardRecognition extends Thread {
 		try {
 			robot = new Robot();
 
-//			BufferedImage screenFullImage = robot.createScreenCapture(MainWindows.snipIt.getSelectedBounds());
-			BufferedImage screenFullImage = robot.createScreenCapture(new Rectangle(2481, 152, 768, 768));
+			BufferedImage screenFullImage = robot.createScreenCapture(MainWindows.snipIt.getSelectedBounds());
+//			BufferedImage screenFullImage = robot.createScreenCapture(new Rectangle(2481, 152, 768, 768));
 			src = bufferedImage2Mat(screenFullImage);
 
 			/// Copy the source image

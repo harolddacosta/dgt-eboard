@@ -158,7 +158,7 @@ public class Chessboard {
 					}
 
 					if (startingSquare != null && finalSquare != null) {
-						playForColor = startingSquare.getPiece().getColor();
+						playForColor = finalSquare.getPiece().getColor();
 
 						return examineMovement(startingSquare, previousStateInfinalSquare, finalSquare);
 					}

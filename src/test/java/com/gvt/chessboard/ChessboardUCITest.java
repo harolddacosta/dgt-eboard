@@ -151,6 +151,198 @@ public class ChessboardUCITest {
 		assertEquals("Pawn movement from starting point", Color.BLACK, currentPosition.getPlayForColor());
 	}
 
+	@Test
+	public void movement_pawn_piece_capture_en_passant_white_down() {
+		logger.trace("**************** Movements test ****************");
+
+		Chessboard previousPosition = new Chessboard(true, PlayMode.UCI);
+		previousPosition.setPiece("P", 2, 3);
+		previousPosition.setPiece("p", 3, 3);
+		logger.trace("**************** Previous chesboard ****************");
+		previousPosition.print(false);
+		assertEquals("coordinate test with piece", 'P', previousPosition.getSquare("c5").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'p', previousPosition.getSquare("d5").getPiece().getFenLetter());
+
+		Chessboard currentPosition = new Chessboard(true, PlayMode.UCI);
+		currentPosition.setPiece("P", 3, 2);
+		logger.trace("**************** current chesboard ****************");
+		currentPosition.print(false);
+		assertEquals("should be empty", true, currentPosition.getSquare("d5").isEmpty());
+		assertEquals("should be empty", true, currentPosition.getSquare("c5").isEmpty());
+		assertEquals("coordinate test with piece", 'P', currentPosition.getSquare("d6").getPiece().getFenLetter());
+
+		assertEquals("Pawn movement from starting point", "cxd6", currentPosition.compare(previousPosition));
+		assertEquals("Pawn movement from starting point", Color.WHITE, currentPosition.getPlayForColor());
+	}
+
+	@Test
+	public void movement_pawn_piece_capture_en_passant_white_down_to_left() {
+		logger.trace("**************** Movements test ****************");
+
+		Chessboard previousPosition = new Chessboard(true, PlayMode.UCI);
+		previousPosition.setPiece("P", 2, 3);
+		previousPosition.setPiece("p", 1, 3);
+		logger.trace("**************** Previous chesboard ****************");
+		previousPosition.print(false);
+		assertEquals("coordinate test with piece", 'P', previousPosition.getSquare("c5").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'p', previousPosition.getSquare("b5").getPiece().getFenLetter());
+
+		Chessboard currentPosition = new Chessboard(true, PlayMode.UCI);
+		currentPosition.setPiece("P", 1, 2);
+		logger.trace("**************** current chesboard ****************");
+		currentPosition.print(false);
+		assertEquals("should be empty", true, currentPosition.getSquare("b5").isEmpty());
+		assertEquals("should be empty", true, currentPosition.getSquare("c5").isEmpty());
+		assertEquals("coordinate test with piece", 'P', currentPosition.getSquare("b6").getPiece().getFenLetter());
+
+		assertEquals("Pawn movement from starting point", "cxb6", currentPosition.compare(previousPosition));
+		assertEquals("Pawn movement from starting point", Color.WHITE, currentPosition.getPlayForColor());
+	}
+
+	@Test
+	public void movement_pawn_piece_capture_en_passant_white_up() {
+		logger.trace("**************** Movements test ****************");
+
+		Chessboard previousPosition = new Chessboard(false, PlayMode.UCI);
+		previousPosition.setPiece("P", 2, 3);
+		previousPosition.setPiece("p", 3, 3);
+		logger.trace("**************** Previous chesboard ****************");
+		previousPosition.print(false);
+		assertEquals("coordinate test with piece", 'P', previousPosition.getSquare("f4").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'p', previousPosition.getSquare("e4").getPiece().getFenLetter());
+
+		Chessboard currentPosition = new Chessboard(false, PlayMode.UCI);
+		currentPosition.setPiece("p", 2, 2);
+		logger.trace("**************** current chesboard ****************");
+		currentPosition.print(false);
+		assertEquals("should be empty", true, currentPosition.getSquare("e4").isEmpty());
+		assertEquals("should be empty", true, currentPosition.getSquare("f4").isEmpty());
+		assertEquals("coordinate test with piece", 'p', currentPosition.getSquare("f3").getPiece().getFenLetter());
+
+		assertEquals("Pawn movement from starting point", "exf3", currentPosition.compare(previousPosition));
+		assertEquals("Pawn movement from starting point", Color.BLACK, currentPosition.getPlayForColor());
+	}
+
+	@Test
+	public void movement_pawn_piece_capture_en_passant_white_up_right() {
+		logger.trace("**************** Movements test ****************");
+
+		Chessboard previousPosition = new Chessboard(false, PlayMode.UCI);
+		previousPosition.setPiece("P", 2, 3);
+		previousPosition.setPiece("p", 1, 3);
+		logger.trace("**************** Previous chesboard ****************");
+		previousPosition.print(false);
+		assertEquals("coordinate test with piece", 'P', previousPosition.getSquare("f4").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'p', previousPosition.getSquare("g4").getPiece().getFenLetter());
+
+		Chessboard currentPosition = new Chessboard(false, PlayMode.UCI);
+		currentPosition.setPiece("p", 2, 2);
+		logger.trace("**************** current chesboard ****************");
+		currentPosition.print(false);
+		assertEquals("should be empty", true, currentPosition.getSquare("g4").isEmpty());
+		assertEquals("should be empty", true, currentPosition.getSquare("f4").isEmpty());
+		assertEquals("coordinate test with piece", 'p', currentPosition.getSquare("f3").getPiece().getFenLetter());
+
+		assertEquals("Pawn movement from starting point", "gxf3", currentPosition.compare(previousPosition));
+		assertEquals("Pawn movement from starting point", Color.BLACK, currentPosition.getPlayForColor());
+	}
+
+	@Test
+	public void movement_pawn_piece_capture_en_passant_for_black_with_white_down() {
+		logger.trace("**************** Movements test ****************");
+
+		Chessboard previousPosition = new Chessboard(true, PlayMode.UCI);
+		previousPosition.setPiece("P", 2, 4);
+		previousPosition.setPiece("p", 3, 4);
+		logger.trace("**************** Previous chesboard ****************");
+		previousPosition.print(false);
+		assertEquals("coordinate test with piece", 'P', previousPosition.getSquare("c4").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'p', previousPosition.getSquare("d4").getPiece().getFenLetter());
+
+		Chessboard currentPosition = new Chessboard(true, PlayMode.UCI);
+		currentPosition.setPiece("p", 2, 5);
+		logger.trace("**************** current chesboard ****************");
+		currentPosition.print(false);
+		assertEquals("should be empty", true, currentPosition.getSquare("c4").isEmpty());
+		assertEquals("should be empty", true, currentPosition.getSquare("d4").isEmpty());
+		assertEquals("coordinate test with piece", 'p', currentPosition.getSquare("c3").getPiece().getFenLetter());
+
+		assertEquals("Pawn movement from starting point", "dxc3", currentPosition.compare(previousPosition));
+		assertEquals("Pawn movement from starting point", Color.BLACK, currentPosition.getPlayForColor());
+	}
+
+	@Test
+	public void movement_pawn_piece_capture_en_passant_to_left_for_black_with_white_down() {
+		logger.trace("**************** Movements test ****************");
+
+		Chessboard previousPosition = new Chessboard(true, PlayMode.UCI);
+		previousPosition.setPiece("P", 2, 4);
+		previousPosition.setPiece("p", 1, 4);
+		logger.trace("**************** Previous chesboard ****************");
+		previousPosition.print(false);
+		assertEquals("coordinate test with piece", 'P', previousPosition.getSquare("c4").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'p', previousPosition.getSquare("b4").getPiece().getFenLetter());
+
+		Chessboard currentPosition = new Chessboard(true, PlayMode.UCI);
+		currentPosition.setPiece("p", 2, 5);
+		logger.trace("**************** current chesboard ****************");
+		currentPosition.print(false);
+		assertEquals("should be empty", true, currentPosition.getSquare("c4").isEmpty());
+		assertEquals("should be empty", true, currentPosition.getSquare("b4").isEmpty());
+		assertEquals("coordinate test with piece", 'p', currentPosition.getSquare("c3").getPiece().getFenLetter());
+
+		assertEquals("Pawn movement from starting point", "bxc3", currentPosition.compare(previousPosition));
+		assertEquals("Pawn movement from starting point", Color.BLACK, currentPosition.getPlayForColor());
+	}
+
+	@Test
+	public void movement_pawn_piece_capture_en_passant_for_white_with_white_up() {
+		logger.trace("**************** Movements test ****************");
+
+		Chessboard previousPosition = new Chessboard(false, PlayMode.UCI);
+		previousPosition.setPiece("P", 2, 4);
+		previousPosition.setPiece("p", 3, 4);
+		logger.trace("**************** Previous chesboard ****************");
+		previousPosition.print(false);
+		assertEquals("coordinate test with piece", 'P', previousPosition.getSquare("f5").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'p', previousPosition.getSquare("e5").getPiece().getFenLetter());
+
+		Chessboard currentPosition = new Chessboard(false, PlayMode.UCI);
+		currentPosition.setPiece("P", 3, 5);
+		logger.trace("**************** current chesboard ****************");
+		currentPosition.print(false);
+		assertEquals("should be empty", true, currentPosition.getSquare("f5").isEmpty());
+		assertEquals("should be empty", true, currentPosition.getSquare("e5").isEmpty());
+		assertEquals("coordinate test with piece", 'P', currentPosition.getSquare("e6").getPiece().getFenLetter());
+
+		assertEquals("Pawn movement from starting point", "fxe6", currentPosition.compare(previousPosition));
+		assertEquals("Pawn movement from starting point", Color.WHITE, currentPosition.getPlayForColor());
+	}
+
+	@Test
+	public void movement_pawn_piece_capture_en_passant_left_for_white_with_white_up() {
+		logger.trace("**************** Movements test ****************");
+
+		Chessboard previousPosition = new Chessboard(false, PlayMode.UCI);
+		previousPosition.setPiece("P", 4, 4);
+		previousPosition.setPiece("p", 3, 4);
+		logger.trace("**************** Previous chesboard ****************");
+		previousPosition.print(false);
+		assertEquals("coordinate test with piece", 'P', previousPosition.getSquare("d5").getPiece().getFenLetter());
+		assertEquals("coordinate test with piece", 'p', previousPosition.getSquare("e5").getPiece().getFenLetter());
+
+		Chessboard currentPosition = new Chessboard(false, PlayMode.UCI);
+		currentPosition.setPiece("P", 3, 5);
+		logger.trace("**************** current chesboard ****************");
+		currentPosition.print(false);
+		assertEquals("should be empty", true, currentPosition.getSquare("d5").isEmpty());
+		assertEquals("should be empty", true, currentPosition.getSquare("e5").isEmpty());
+		assertEquals("coordinate test with piece", 'P', currentPosition.getSquare("e6").getPiece().getFenLetter());
+
+		assertEquals("Pawn movement from starting point", "dxe6", currentPosition.compare(previousPosition));
+		assertEquals("Pawn movement from starting point", Color.WHITE, currentPosition.getPlayForColor());
+	}
+
 	/////////////// *************** Rook
 
 	@Test

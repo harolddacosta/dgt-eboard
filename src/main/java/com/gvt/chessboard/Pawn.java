@@ -31,10 +31,33 @@ public class Pawn implements Piece {
 		String retValue = null;
 		boolean thereWasCapture = false;
 
-		if (!previousStateInfinalSquare.isEmpty()) {
-			logger.trace("There was a capture");
+		logger.debug("finalSquare.getAlgebraicCoordinate().charAt(0):{}", finalSquare.getAlgebraicCoordinate());
+		logger.debug("startingSquare.getAlgebraicCoordinate().charAt(0):{}", startingSquare.getAlgebraicCoordinate());
+		logger.debug("previousStateInfinalSquare.getAlgebraicCoordinate():{}", previousStateInfinalSquare.getAlgebraicCoordinate());
+
+		logger.debug("finalSquare.getPiece():{}", finalSquare.getPiece().getFenLetter());
+		logger.debug("startingSquare.getPiece():{}", startingSquare.getPiece().getFenLetter());
+//		logger.debug("previousStateInfinalSquare.getPiece():{}", previousStateInfinalSquare.getPiece().getFenLetter());
+
+		if (!previousStateInfinalSquare.isEmpty()
+				|| (finalSquare.getAlgebraicCoordinate().charAt(0) != startingSquare.getAlgebraicCoordinate().charAt(0))) {
+			logger.debug("There was a capture");
 
 			thereWasCapture = true;
+		}
+
+		if ((finalSquare.getPiece().getFenLetter() == 'P' && startingSquare.getPiece().getFenLetter() == 'p')) {
+			logger.debug("There was a capture en passant to left");
+
+			return retValue = Character.valueOf((char) ((int) (startingSquare.getAlgebraicCoordinate().charAt(0)) + 1)) + "x"
+					+ finalSquare.getAlgebraicCoordinate();
+		}
+
+		if ((finalSquare.getPiece().getFenLetter() == 'p' && startingSquare.getPiece().getFenLetter() == 'P')) {
+			logger.debug("There was a capture en passant to left");
+
+			return retValue = Character.valueOf((char) ((int) (startingSquare.getAlgebraicCoordinate().charAt(0)) - 1)) + "x"
+					+ finalSquare.getAlgebraicCoordinate();
 		}
 
 		if (!thereWasCapture) {
