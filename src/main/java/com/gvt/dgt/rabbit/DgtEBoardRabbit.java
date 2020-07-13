@@ -5,6 +5,7 @@ import java.awt.AWTException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.gvt.chessboard.Piece.Color;
 import com.gvt.dgt.DgtEBoard;
 import com.gvt.windows.Keyboard;
 import com.gvt.windows.MainWindows;
@@ -28,6 +29,8 @@ public class DgtEBoardRabbit implements DgtEBoard {
 
 		if (MainWindows.chessboardRecognition.isWhitePiecesBottom()) {
 			try {
+				str = MainWindows.chessboardRecognition.fixDgtPlay(str, Color.WHITE);
+
 				keyboard = new Keyboard();
 				keyboard.type(str);
 			} catch (AWTException e) {
@@ -49,6 +52,8 @@ public class DgtEBoardRabbit implements DgtEBoard {
 
 		if (!MainWindows.chessboardRecognition.isWhitePiecesBottom()) {
 			try {
+				str = MainWindows.chessboardRecognition.fixDgtPlay(str, Color.BLACK);
+
 				keyboard = new Keyboard();
 				keyboard.type(str);
 			} catch (AWTException e) {

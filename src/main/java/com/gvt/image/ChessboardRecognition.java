@@ -364,13 +364,13 @@ public class ChessboardRecognition extends Thread {
 				try {
 					if (whitePiecesBottom && currentChessboard.getPlayForColor() == Color.BLACK) {
 						dgtEBoard.getDll()._DGTDLL_PlayBlackMove(play);
-						dgtEBoard.getDll()._DGTDLL_DisplayClockMessage(play, 3000);
+						dgtEBoard.getDll()._DGTDLL_DisplayClockMessage(play, 1500);
 						Toolkit.getDefaultToolkit().beep();
 						MainWindows.label.setText(play);
 						MainWindows.label.repaint();
 					} else if (!whitePiecesBottom && currentChessboard.getPlayForColor() == Color.WHITE) {
 						dgtEBoard.getDll()._DGTDLL_PlayWhiteMove(play);
-						dgtEBoard.getDll()._DGTDLL_DisplayClockMessage(play, 3000);
+						dgtEBoard.getDll()._DGTDLL_DisplayClockMessage(play, 1500);
 						Toolkit.getDefaultToolkit().beep();
 						MainWindows.label.setText(play);
 						MainWindows.label.repaint();
@@ -754,5 +754,9 @@ public class ChessboardRecognition extends Thread {
 
 	public Mat[] getBlackPieces() {
 		return blackPieces;
+	}
+
+	public String fixDgtPlay(String str, Color color) {
+		return currentChessboard.fixDgtPlay(str, color);
 	}
 }

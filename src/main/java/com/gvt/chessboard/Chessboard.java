@@ -1,6 +1,7 @@
 package com.gvt.chessboard;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -219,6 +220,14 @@ public class Chessboard {
 				squares[x][y] = new Square(convertCoordinatesToAlgebraic(x, y, whitePiecesBottom));
 			}
 		}
+	}
+
+	public String fixDgtPlay(String str, Color color) {
+		if (str.length() == 5 && StringUtils.isAlpha(str.substring(0, 2))) {
+			return str.substring(0, 1).toUpperCase() + str.substring(2);
+		}
+
+		return str;
 	}
 
 }
